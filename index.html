@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#FFF0F5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="double">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>double · 我们的小窝</title>
+<!-- 底色兜底：即使外部样式表晚到/失败，也绝不显示纯白 -->
+<style>html,body{background:#FFF8F0;margin:0;padding:0;min-height:100%;}</style>
+<link rel="icon" type="image/png" href="assets/app_icon.png">
+<link rel="apple-touch-icon" href="assets/app_icon.png">
+<link rel="stylesheet" href="css/style.css?v=20260908e">
+</head>
+<body>
+<script>
+/* 启动兜底 #1：body 一解析就先显示加载页（绝不白屏）；app.js 会复用/移除它 */
+window.__HTML_VER = '20260908e';
+(function () {
+  var s = document.getElementById('bootSplash');
+  if (!s) {
+    s = document.createElement('div');
+    s.id = 'bootSplash';
+    s.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:999998;background:#FFF8F0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;color:#9a7a66;text-align:center;padding:28px;box-sizing:border-box';
+    var ic = document.createElement('div'); ic.style.cssText = 'font-size:52px;line-height:1'; ic.textContent = '🐰🐶';
+    var t = document.createElement('div'); t.id = 'bootMsg'; t.textContent = '正在准备我们的小窝…'; t.style.cssText = 'font-size:15px;line-height:1.6;white-space:pre-line';
+    var b = document.createElement('button'); b.id = 'bootReload'; b.style.cssText = 'display:none;margin-top:10px;padding:11px 22px;border:none;border-radius:999px;background:#ff8fab;color:#fff;font-size:15px;font-weight:600'; b.textContent = '🔄 强制刷新';
+    b.onclick = function () { try { location.replace(location.pathname + location.search + (location.search ? '&' : '?') + 'hb=' + Date.now()); } catch (e2) { location.reload(); } };
+    s.appendChild(ic); s.appendChild(t); s.appendChild(b);
+  }
+  document.body.appendChild(s);
+  /* 迷你 boot 层：不依赖 app.js。外部脚本加载失败/运行报错 → 立刻给出提示而非白屏 */
+  window.__bootMsg = function (m) { var t = document.getElementById('bootMsg'); if (t) t.textContent = m; };
+  window.__bootErr = function (m) {
+    var t = document.getElementById('bootMsg'); if (t) t.textContent = m || '页面加载遇到问题，点下方按钮强制刷新一次';
+    var b = document.getElementById('bootReload'); if (b) b.style.display = 'inline-block';
+    var sp = document.getElementById('bootSplash'); if (sp) sp.style.zIndex = 9999999;
+  };
+  window.__bootDone = function () { var sp = document.getElementById('bootSplash'); if (sp && sp.parentNode) sp.parentNode.removeChild(sp); };
+  window.addEventListener('error', function (e) {
+    var src = (e && (e.filename || '')) || '';
+    if (!src || /\.(png|jpe?g|webp|gif|svg|ico|woff2?|mp3|mp4)/i.test(src)) return;
+    window.__bootErr('页面出了点小问题\n（' + ((e && e.message) || '脚本错误').slice(0, 60) + '）\n点下方按钮刷新一次');
+  }, true);
+  window.addEventListener('unhandledrejection', function (e) {
+    var r = (e && e.reason) || {};
+    var m = (r && r.message) || '';
+    if (/AbortError|NetworkError|Failed to fetch|timeout/i.test(m)) return;
+    window.__bootErr('页面出了点小问题\n点下方按钮刷新一次');
+  });
+  /* 看门狗：12s 后加载页还没被 app.js 移除 → 大概率旧缓存/脚本卡死。
+     自动带新参数强刷一次；若仍失败则亮出「强制刷新」按钮，绝不无限白屏 */
+  setTimeout(function () {
+    if (!document.getElementById('bootSplash')) return;
+    var b = document.getElementById('bootReload');
+    // app.js 已给出明确错误提示 → 不再自动刷，交给用户
+    if (b && b.style.display !== 'none') return;
+    var auto = false;
+    try { auto = sessionStorage.getItem('cp_hb1') === '1'; } catch (e3) {}
+    var msg = document.getElementById('bootMsg');
+    if (!auto) {
+      if (msg) msg.textContent = '加载有点慢，正在帮你刷新一次…\n（几秒后自动重进）';
+      try { sessionStorage.setItem('cp_hb1', '1'); } catch (e4) {}
+      try { location.replace(location.pathname + location.search + (location.search ? '&' : '?') + 'hb=' + Date.now()); } catch (e5) { location.reload(); }
+    } else {
+      if (msg) msg.textContent = '还是没能进来…\n可能是网络慢或浏览器缓存太旧\n点下方按钮再试一次，一般就好了';
+      if (b) b.style.display = 'inline-block';
+    }
+  }, 12000);
+})();
+</script>
+
+<div id="app" class="hidden">
+  <header class="topbar">
+    <button class="icon-btn" id="btnSettings" title="设置">⚙️</button>
+    <div class="harmony-pill">💞 默契值 <b id="harmonyVal">0</b><span class="room-tag" id="roomTag"></span></div>
+    <div class="days-pill" id="daysPill" title="在一起的天数">💗 1天</div>
+    <button class="icon-btn" id="btnSync" title="同步">🔄</button>
+  </header>
+
+  <div id="birthdayBanner" class="banner hidden"></div>
+
+  <main id="main">
+    <!-- 🏠 小家：汤姆猫式全屏互动宠物 -->
+    <section id="tab-home" class="tab active">
+      <div id="petStage" class="pet-stage">
+        <img id="stageBg" class="stage-bg" alt="">
+        <div class="stage-vignette"></div>
+
+        <div class="stage-toolbar">
+          <div id="sceneInfo" class="scene-chips"></div>
+          <div class="toolbar-right">
+            <button class="chip-btn tgl" id="btnSceneToggle">💼 去上班</button>
+            <button class="chip-btn" id="btnSheet" title="今日面板">📋</button>
+          </div>
+        </div>
+
+        <div id="petStats" class="stage-stats"></div>
+        <div id="petStagePets" class="stage-pets"></div>
+        <div id="stageFloat" class="stage-float"></div>
+        <div class="stage-hint">👆 摸它的头 · 耳朵 · 肚子 · 爪子，会有不同反应</div>
+        <div id="petDock" class="stage-dock"></div>
+
+        <div id="homeSheet" class="sheet">
+          <div class="sheet-mask" id="sheetMask"></div>
+          <div class="sheet-body">
+            <div class="sheet-grab"><i></i></div>
+            <div class="sheet-title" id="sheetTitle">📋 今日面板</div>
+            <div id="studyTask"></div>
+            <div class="exp-row" id="expRow"></div>
+            <div class="personality" id="personalityBox"></div>
+            <div class="sheet-story-block"><div class="cap">今 日 一 句</div><div id="storyText"></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 🍚 打卡：一起吃/没一起 -->
+    <section id="tab-checkin" class="tab">
+      <div class="streak-line" id="streakLine"></div>
+      <div id="mealList"></div>
+      <div class="card">
+        <h3>👀 今天我们都吃了啥</h3>
+        <div id="bothCheckins"></div>
+      </div>
+      <div class="card tip-card">
+        🍚 按时吃饭才有经验哦<br>过期的餐不能补卡，明天继续加油~
+      </div>
+    </section>
+
+    <!-- 🎮 互动：按模式显示玩法 + 悄悄话 -->
+    <section id="tab-interact" class="tab">
+      <div class="mode-banner" id="modeBanner"></div>
+      <div class="act-grid">
+        <div class="act-card act-full" id="birthdayAct"></div>
+        <div class="act-card">
+          <div class="big">🎁</div>
+          <div class="t">惊喜盲盒</div>
+          <div class="d" id="boxDesc">每天一次小惊喜</div>
+          <button class="btn-mini" id="btnBox">开箱</button>
+        </div>
+        <div class="act-card">
+          <div class="big">🤗</div>
+          <div class="t">抱抱 TA</div>
+          <div class="d" id="hugDesc">摸摸头，一切都会好的</div>
+          <button class="btn-mini blue" id="btnHug">抱一下</button>
+        </div>
+      </div>
+
+      <!-- 模式化玩法区（同地=实时游戏，异地=异步陪伴） -->
+      <div class="card" style="margin-top:14px">
+        <h3>🎯 <span id="gameTitle">默契大比拼</span> <span class="sub" id="gameSub"></span></h3>
+        <div class="game-grid" id="gameGrid"></div>
+        <div class="game-status" id="gameStatus"></div>
+      </div>
+
+      <!-- 悄悄话 -->
+      <div class="card" style="margin-top:14px">
+        <h3>📮 <span id="whisperTitle">悄悄话小信箱</span> <span class="sub" id="whisperSub"></span></h3>
+        <button class="btn-mini" id="btnWriteWhisper" style="width:100%;padding:11px">✍️ 给 TA 写一句悄悄话</button>
+        <div style="height:12px"></div>
+        <div class="whisper-list" id="whisperList"></div>
+      </div>
+    </section>
+
+    <!-- 🤝 心情：走心互答 + 心情日记 -->
+    <section id="tab-mood" class="tab">
+      <div class="card">
+        <h3>💌 走心互答 <span class="sub">一天一个话题</span></h3>
+        <div class="qa-box" id="qaContext"></div>
+        <div class="qa-q" id="qaQuestion"></div>
+        <div class="qa-actions" id="qaActions"></div>
+        <div class="qa-reveal" id="qaReveal"></div>
+      </div>
+      <div class="card">
+        <h3>🗓️ 心情日记 <span class="sub">记录每天的小情绪</span></h3>
+        <div class="mood-head">
+          <button class="mood-nav" id="moodPrev">‹</button>
+          <div id="moodMonthLabel"></div>
+          <button class="mood-nav" id="moodNext">›</button>
+        </div>
+        <div class="mood-grid" id="moodGrid"></div>
+        <div class="mood-today" id="moodTodayInfo"></div>
+      </div>
+    </section>
+
+    <!-- 🏡 小屋：可拖动家具 + 装扮 + 收藏 + 成就 -->
+    <section id="tab-room" class="tab">
+      <div class="card">
+        <h3>🛋️ 装修我们的小屋 <span class="sub" id="decorSub"></span></h3>
+        <div class="decor-stage" id="decorStage"></div>
+        <div class="decor-hints">按住摆件可直接拖动 · 点 ✕ 收起 · 点下方添摆件 / 换壁纸</div>
+        <button class="btn-mini blue" id="btnFullRoom" style="width:100%;padding:11px;margin-top:10px">📺 全屏看家园</button>
+        <button class="btn-mini" id="btnDecorate" style="width:100%;padding:11px;margin-top:8px">🧸 添一件摆件</button>
+      </div>
+      <div class="card">
+        <h3>🎀 给宠物打扮 <span class="sub">点一下就穿上</span></h3>
+        <div class="pet-stage" id="dressStage"></div>
+        <div class="dress-grid" id="dressGrid"></div>
+      </div>
+      <div class="card">
+        <h3>🪴 小屋收藏 <span class="sub" id="furnSub"></span></h3>
+        <div class="furn-wall" id="furnWall"></div>
+      </div>
+      <div class="card">
+        <h3>🏅 成就墙</h3>
+        <div class="ach-row" id="achRow"></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button data-tab="home" class="active">🏠<span>小家</span></button>
+    <button data-tab="checkin">🍚<span>打卡</span></button>
+    <button data-tab="interact">🎮<span>互动</span><i class="badge hidden" id="interactBadge"></i></button>
+    <button data-tab="mood">🤝<span>心情</span></button>
+    <button data-tab="room">🏡<span>小屋</span></button>
+  </nav>
+</div>
+
+<!-- 🏡 全屏家园（单独撑满整个画面） -->
+<div id="fullRoom" class="fullroom hidden">
+  <div class="fr-top">
+    <button class="icon-btn" id="btnCloseRoom">←</button>
+    <div class="fr-title">🏠 我们的家园</div>
+    <div class="fr-spacer"></div>
+  </div>
+  <div id="fullRoomBody" class="fr-body"></div>
+</div>
+
+<!-- 入口配对屏（suki 式介绍卡 + 流动文案） -->
+<div id="gate" class="gate">
+  <div class="gate-box">
+    <div class="gate-logo">
+      <img class="gate-icon" src="assets/app_icon.png" alt="double">
+      <h1>double</h1>
+      <div class="gate-quote" id="gateQuote"></div>
+    </div>
+
+    <div id="gateHome" class="gate-card">
+      <div class="gate-title">欢迎回来~</div>
+      <button class="btn-main" id="btnCreate">🌱 创建我们的小窝</button>
+      <button class="btn-ghost" id="btnJoin">🚪 加入 TA 的小窝</button>
+      <div class="gate-tip">只有知道房间码和暗号的两个人能进来<br>悄悄话全程加密，读后即焚</div>
+    </div>
+
+    <div id="gateCreate" class="gate-card hidden">
+      <div class="gate-title">🌱 创建我们的小窝</div>
+      <div class="field"><label>我要养哪只？</label>
+        <div class="role-pick">
+          <button class="role-card sel" data-role="rabbit"><img src="assets/pet_rabbit.png"><div class="n">🐰 小兔</div><div class="bd">生日 5月3日</div></button>
+          <button class="role-card" data-role="dog"><img src="assets/pet_dog.png"><div class="n">🐶 小狗</div><div class="bd">生日 3月21日</div></button>
+        </div>
+      </div>
+      <div class="field"><label>给我的宠物起个名字</label><input id="createName" maxlength="8" placeholder="比如：奶糖"></div>
+      <div class="field"><label>两人暗号（TA 加入时要输入，别太简单）</label><input id="createSecret" maxlength="16" placeholder="只你们俩知道"></div>
+      <button class="btn-main" id="btnDoCreate">建好啦，去邀请 TA</button>
+      <button class="btn-ghost" id="btnBack1">返回</button>
+    </div>
+
+    <div id="gateJoin" class="gate-card hidden">
+      <div class="gate-title">🚪 加入 TA 的小窝</div>
+      <div class="field"><label>房间码（TA 发给你的）</label><input id="joinCode" maxlength="24" placeholder="XXXX-XXXX-XXXX-XXXX" autocapitalize="characters"></div>
+      <div class="field"><label>两人暗号</label><input id="joinSecret" maxlength="16" placeholder="只你们俩知道"></div>
+      <div class="field hidden" id="joinNameField"><label>给你的宠物起个名字</label><input id="joinName" maxlength="8" placeholder="比如：布丁"></div>
+      <button class="btn-main" id="btnDoJoin">进入我们的小窝</button>
+      <button class="btn-ghost" id="btnBack2">返回</button>
+    </div>
+
+    <div id="gateInvite" class="gate-card hidden">
+      <div class="gate-title">🎉 小窝建好了！</div>
+      <div class="invite-hero">
+        <div class="ih-pet"><img src="assets/pet_rabbit.png" id="invitePetImg"><div class="ih-cap" id="invitePetName"></div></div>
+        <div class="ih-mid"><div class="ih-heart">💞</div><div class="ih-line">我们要住在一起啦</div></div>
+        <div class="ih-pet"><img src="assets/pet_dog.png"><div class="ih-cap">等你来</div></div>
+      </div>
+      <div class="invite-code" id="inviteCode"></div>
+      <div class="invite-secret">暗号：<b id="inviteSecret"></b></div>
+      <div class="invite-text" id="inviteText"></div>
+      <button class="btn-main" id="btnCopyInvite" style="margin-top:14px">📋 复制邀请，发给 TA</button>
+      <button class="btn-ghost" id="btnEnterRoom">先进去等着 TA~</button>
+      <div class="gate-tip">TA 打开链接后会自动填好房间码，只需要输入暗号</div>
+    </div>
+  </div>
+</div>
+
+<div id="modal" class="modal hidden"><div class="modal-box" id="modalBox"></div></div>
+<div id="toast" class="toast hidden"></div>
+
+<script src="js/app.js?v=20260908e"></script>
+</body>
+</html>
