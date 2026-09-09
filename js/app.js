@@ -5,7 +5,7 @@
 'use strict';
 
 /* ===== 启动自检 / 防白屏兜底（必须最先执行） ===== */
-window.__APP_VER = '20260910a';
+window.__APP_VER = '20260910b';
 (function () {
   function ensureSplash() {
     var s = document.getElementById('bootSplash');
@@ -615,183 +615,39 @@ const PET_REACT = {
 function defaultStats() { return { hunger: 88, clean: 96, happy: 86, energy: 92, ts: Date.now(), fed: '', bathe: '', slept: '', lastBath: Date.now() }; }
 function care(role) { const p = state.pets[role]; if (!p) return defaultStats(); if (!p.stats) p.stats = defaultStats(); return p.stats; }
 
-/* ================= 灵动矢量形态（方案 C：平时原图 PNG，互动瞬间切矢量，摸哪动哪） ================= */
-function rabbitSVG(mood) {
-  const uid = 'r' + Math.random().toString(36).slice(2, 7);
-  const ang = mood === 'angry';
-  const sad = mood === 'sad';
-  const mouth = ang
-    ? `<path d="M146 208 Q150 200 154 208" fill="none" stroke="#7a4a3a" stroke-width="3.4" stroke-linecap="round"/>`
-    : sad
-    ? `<path d="M140 208 Q150 200 160 208" fill="none" stroke="#7a4a3a" stroke-width="2.6" stroke-linecap="round"/>`
-    : `<path d="M136 202 Q144 210 150 202 Q156 210 164 202" fill="none" stroke="#8a5a44" stroke-width="2.6" stroke-linecap="round"/>`;
-  const brows = ang
-    ? `<g stroke="#4a3120" stroke-width="4.6" stroke-linecap="round">
-         <path d="M102 154 Q120 160 136 156" fill="none"/>
-         <path d="M218 154 Q200 160 184 156" fill="none"/></g>`
-    : sad
-    ? `<g stroke="#7a6a5a" stroke-width="3.6" stroke-linecap="round" opacity=".75">
-         <path d="M106 158 Q122 150 136 158" fill="none"/>
-         <path d="M214 158 Q198 150 184 158" fill="none"/></g>`
-    : ``;
-  const eyes = sad
-    ? `<g><circle cx="120" cy="170" r="5.6" fill="#32241f"/><circle cx="200" cy="170" r="5.6" fill="#32241f"/>
-         <circle cx="119.5" cy="174" r="1.9" fill="#fff"/><circle cx="199.5" cy="174" r="1.9" fill="#fff"/></g>`
-    : `<g><circle cx="120" cy="167" r="6.4" fill="#32241f"/><circle cx="200" cy="167" r="6.4" fill="#32241f"/>
-         <circle cx="122" cy="165" r="2.2" fill="#fff"/><circle cx="202" cy="165" r="2.2" fill="#fff"/>
-         <circle cx="118" cy="169" r="1.2" fill="#fff" opacity=".7"/><circle cx="198" cy="169" r="1.2" fill="#fff" opacity=".7"/></g>`;
-  const tear = sad ? `<ellipse cx="206" cy="178" rx="3.4" ry="5.4" fill="#a9d4f0" opacity=".9"/>` : ``;
-  const mark = ang ? `<g transform="translate(238,92)"><text y="0" font-size="26">💢</text></g>` : ``;
-  const spark = (!ang && !sad) ? `<g stroke="#ffd35e" stroke-width="2.4" stroke-linecap="round"><path d="M44 84 l0 12M38 90 l12 0" /><path d="M272 150 l0 10M267 155 l10 0"/></g>` : ``;
-  return `<svg class="vec-svg" viewBox="0 0 320 340" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="${uid}b" cx="42%" cy="30%" r="80%"><stop offset="0%" stop-color="#eec58f"/><stop offset="62%" stop-color="#dd9f66"/><stop offset="100%" stop-color="#c47f49"/></radialGradient>
-    <radialGradient id="${uid}h" cx="45%" cy="32%" r="85%"><stop offset="0%" stop-color="#f6d3a4"/><stop offset="70%" stop-color="#e9b979"/><stop offset="100%" stop-color="#d99f5e"/></radialGradient>
-    <linearGradient id="${uid}ie" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f9cad4"/><stop offset="100%" stop-color="#f3a7ba"/></linearGradient>
-    <filter id="${uid}bl" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.2"/></filter>
-    <filter id="${uid}so" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6"/></filter>
-  </defs>
-  <ellipse cx="160" cy="322" rx="92" ry="11" fill="rgba(120,60,90,.16)" filter="url(#${uid}so)"/>
-  <ellipse cx="160" cy="252" rx="66" ry="60" fill="url(#${uid}b)" opacity=".96"/>
-  <ellipse cx="160" cy="262" rx="38" ry="40" fill="#fff2de"/>
-  <g fill="#c47f49" opacity=".5" filter="url(#${uid}bl)">
-    <ellipse cx="112" cy="286" rx="20" ry="13"/><ellipse cx="208" cy="286" rx="20" ry="13"/><ellipse cx="160" cy="300" rx="24" ry="9"/>
-  </g>
-  <g class="earL" style="transform-origin:116px 138px">
-    <ellipse cx="118" cy="86" rx="18" ry="54" transform="rotate(-9 118 86)" fill="url(#${uid}b)"/>
-    <ellipse cx="118" cy="92" rx="8.5" ry="41" transform="rotate(-9 118 86)" fill="url(#${uid}ie)"/>
-  </g>
-  <g class="earR" style="transform-origin:202px 138px">
-    <ellipse cx="202" cy="86" rx="18" ry="54" transform="rotate(9 202 86)" fill="url(#${uid}b)"/>
-    <ellipse cx="202" cy="92" rx="8.5" ry="41" transform="rotate(9 202 86)" fill="url(#${uid}ie)"/>
-  </g>
-  <ellipse cx="160" cy="180" rx="60" ry="54" fill="url(#${uid}h)"/>
-  <ellipse cx="160" cy="204" rx="32" ry="23" fill="#fff4e4"/>
-  <ellipse cx="160" cy="190" rx="7" ry="5.4" fill="#e07a7a"/><ellipse cx="158.6" cy="188.4" rx="2" ry="1.4" fill="#ffd9d9"/>
-  ${mouth}${brows}${eyes}${tear}
-  <g stroke="#cdb59f" stroke-width="1.3" fill="none" opacity=".9">
-    <path d="M96 190 Q122 192 138 194"/><path d="M92 199 Q120 201 136 200"/>
-    <path d="M224 190 Q198 192 182 194"/><path d="M228 199 Q200 201 184 200"/>
-  </g>
-  <ellipse cx="104" cy="200" rx="12" ry="7" fill="#ffb6c3" opacity=".55"/><ellipse cx="216" cy="200" rx="12" ry="7" fill="#ffb6c3" opacity=".55"/>
-  <g class="pawG" style="transform-origin:160px 296px">
-    <ellipse cx="124" cy="296" rx="17" ry="11" fill="#f9e6c8"/><ellipse cx="196" cy="296" rx="17" ry="11" fill="#f9e6c8"/>
-  </g>
-  <g class="tail" style="transform-origin:246px 250px">
-    <ellipse cx="250" cy="242" rx="16" ry="13" fill="#eec58f"/>
-    <ellipse cx="252" cy="239" rx="8" ry="6" fill="#fbeed6"/>
-  </g>
-  ${mark}${spark}
-</svg>`; }
-function dogSVG(mood) {
-  const uid = 'd' + Math.random().toString(36).slice(2, 7);
-  const ang = mood === 'angry', sad = mood === 'sad';
-  const tongue = ang || sad ? `` : `<ellipse cx="160" cy="200" rx="8.5" ry="8" fill="#f58ba0"/><path d="M160 194 v10" stroke="#d96a80" stroke-width="1.6"/>`;
-  const mouth = ang
-    ? `<path d="M148 192 Q160 184 172 192" fill="none" stroke="#6b4a32" stroke-width="3.2" stroke-linecap="round"/>`
-    : sad
-    ? `<path d="M146 194 Q160 186 174 194" fill="none" stroke="#6b4a32" stroke-width="2.6" stroke-linecap="round"/>`
-    : `<path d="M140 192 Q150 200 160 192 Q170 200 180 192" fill="none" stroke="#6b4a32" stroke-width="2.4" stroke-linecap="round"/>`;
-  const brows = ang
-    ? `<g stroke="#4a3120" stroke-width="4.4" stroke-linecap="round"><path d="M102 136 Q120 142 138 138" fill="none"/><path d="M218 136 Q200 142 182 138" fill="none"/></g>`
-    : sad
-    ? `<g stroke="#7a6a5a" stroke-width="3.4" stroke-linecap="round" opacity=".75"><path d="M106 142 Q122 134 138 142" fill="none"/><path d="M214 142 Q198 134 182 142" fill="none"/></g>`
-    : ``;
-  const eyes = sad
-    ? `<g><circle cx="130" cy="152" r="8" fill="#5b3a22"/><circle cx="190" cy="152" r="8" fill="#5b3a22"/><circle cx="129" cy="156" r="2.4" fill="#fff"/><circle cx="189" cy="156" r="2.4" fill="#fff"/></g>`
-    : `<g><circle cx="130" cy="150" r="9.5" fill="#5b3a22"/><circle cx="190" cy="150" r="9.5" fill="#5b3a22"/>
-         <circle cx="133" cy="147" r="3.4" fill="#fff"/><circle cx="193" cy="147" r="3.4" fill="#fff"/>
-         <circle cx="127" cy="153" r="1.6" fill="#fff" opacity=".75"/><circle cx="187" cy="153" r="1.6" fill="#fff" opacity=".75"/></g>`;
-  const tear = sad ? `<ellipse cx="196" cy="164" rx="3.6" ry="5.8" fill="#a9d4f0" opacity=".9"/>` : ``;
-  const mark = ang ? `<g transform="translate(246,80)"><text y="0" font-size="26">💢</text></g>` : ``;
-  const star = (!ang && !sad) ? `<g class="spark"><path d="M196 96 l3.2 8.4 8.4 3.2 -8.4 3.2 -3.2 8.4 -3.2 -8.4 -8.4 -3.2 8.4 -3.2 Z" fill="#ffd35e" stroke="#f0a93e" stroke-width="1.2" stroke-linejoin="round"/></g>` : ``;
-  const cream = "#fff6e6", creamD = "#f3e2c8", patch = "#d9a05f";
-  return `<svg class="vec-svg" viewBox="0 0 320 340" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <filter id="${uid}so" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6"/></filter>
-  </defs>
-  <ellipse cx="160" cy="322" rx="98" ry="11" fill="rgba(120,60,90,.16)" filter="url(#${uid}so)"/>
-  <g class="tail" style="transform-origin:76px 262px">
-    <circle cx="74" cy="262" r="15" fill="${creamD}"/><circle cx="62" cy="274" r="11" fill="${creamD}"/><circle cx="82" cy="276" r="10" fill="${creamD}"/><circle cx="70" cy="268" r="9" fill="${cream}"/>
-  </g>
-  <ellipse cx="160" cy="268" rx="72" ry="60" fill="${cream}"/>
-  <g fill="${cream}">
-    <circle cx="96" cy="270" r="13"/><circle cx="110" cy="288" r="12"/><circle cx="130" cy="300" r="13"/><circle cx="156" cy="306" r="13"/><circle cx="184" cy="300" r="12"/><circle cx="206" cy="286" r="12"/><circle cx="222" cy="266" r="13"/><circle cx="222" cy="240" r="12"/>
-  </g>
-  <g fill="${creamD}" opacity=".8">
-    <circle cx="100" cy="282" r="9"/><circle cx="122" cy="296" r="9"/><circle cx="148" cy="303" r="9"/><circle cx="176" cy="298" r="9"/><circle cx="202" cy="282" r="9"/><circle cx="216" cy="252" r="8"/>
-  </g>
-  <g opacity=".92">
-    <ellipse cx="192" cy="238" rx="30" ry="20" transform="rotate(-18 192 238)" fill="${patch}"/>
-    <ellipse cx="208" cy="258" rx="16" ry="12" transform="rotate(-18 208 258)" fill="#c98d53"/>
-  </g>
-  <g class="pawR" style="transform-origin:196px 232px">
-    <ellipse cx="198" cy="228" rx="14" ry="12" transform="rotate(-18 198 228)" fill="${cream}"/>
-    <path d="M192 224 q4 -5 8 0 M200 222 q3 -6 7 1" stroke="#e6cfae" stroke-width="1.6" fill="none"/>
-  </g>
-  <g class="earL" style="transform-origin:98px 132px">
-    <ellipse cx="98" cy="176" rx="17" ry="36" transform="rotate(16 98 176)" fill="${patch}"/>
-    <ellipse cx="96" cy="184" rx="8" ry="24" transform="rotate(16 98 176)" fill="#f6e0d8"/>
-  </g>
-  <g class="earR" style="transform-origin:222px 132px">
-    <ellipse cx="222" cy="176" rx="17" ry="36" transform="rotate(-16 222 176)" fill="${patch}"/>
-    <ellipse cx="224" cy="184" rx="8" ry="24" transform="rotate(-16 222 176)" fill="#f6e0d8"/>
-  </g>
-  <ellipse cx="160" cy="150" rx="62" ry="46" fill="${cream}"/>
-  <g fill="${cream}">
-    <circle cx="118" cy="116" r="13"/><circle cx="142" cy="108" r="13"/><circle cx="166" cy="108" r="12"/><circle cx="196" cy="118" r="12"/><circle cx="104" cy="150" r="11"/><circle cx="216" cy="150" r="11"/>
-  </g>
-  <g fill="${creamD}" opacity=".85">
-    <circle cx="108" cy="124" r="8"/><circle cx="134" cy="112" r="8"/><circle cx="162" cy="110" r="8"/><circle cx="192" cy="118" r="8"/><circle cx="214" cy="142" r="8"/>
-  </g>
-  <ellipse cx="112" cy="128" rx="22" ry="14" transform="rotate(-16 112 128)" fill="${patch}" opacity=".85"/>
-  <ellipse cx="160" cy="180" rx="27" ry="20" fill="#fffdf4"/>
-  <ellipse cx="160" cy="172" rx="7.4" ry="5.6" fill="#4a3226"/><ellipse cx="158.6" cy="170" rx="2.2" ry="1.4" fill="#fff" opacity=".8"/>
-  ${mouth}${tongue}${brows}${eyes}${tear}
-  <ellipse cx="110" cy="176" rx="10" ry="6.4" fill="#ffb3be" opacity=".6"/><ellipse cx="210" cy="176" rx="10" ry="6.4" fill="#ffb3be" opacity=".6"/>
-  ${star}${mark}
-</svg>`; }
-function petVecSvg(role, mood) { return role === 'dog' ? dogSVG(mood) : rabbitSVG(mood); }
-
-/* 心情（瞬时表情记忆 + 脏污/低心情兜底） */
-const VEC_MOOD_MEM = {};   // role -> { mood, until }
-function setVecMood(role, mood, ms) { VEC_MOOD_MEM[role] = { mood: mood, until: Date.now() + (ms || 2600) }; }
-function currentMood(role) {
-  const m = VEC_MOOD_MEM[role];
-  if (m && m.until > Date.now()) return m.mood;
-  if (isDirty(role)) return 'sad';
-  try { if (effCare(role).happy < 30) return 'sad'; } catch (e) {}
-  return 'happy';
+/* ================= 水彩原图羽化切层（摸哪动哪，但全程保留原画） =================
+   参考图为连续水彩块，无法靠连通域硬切。这里用「羽化所有权 mask」把各部位从原图抠出：
+   身体底图挖出对应羽化洞，部位图层带同样羽化边缘。静止时 底图+各部位图层 叠加 =
+   原图逐像素一致（已验证 max-err≈0.004）。互动时只对被摸的部位图层做 spring 动画。 */
+const PET_PARTS = {
+  rabbit: { W: 315, H: 413, base: 'assets/petparts/rabbit_base.png',
+    parts: [
+      { id: 'earL', src: 'assets/petparts/rabbit_earL.png', ox: 78, oy: 108 },
+      { id: 'earR', src: 'assets/petparts/rabbit_earR.png', ox: 164, oy: 108 },
+      { id: 'tail', src: 'assets/petparts/rabbit_tail.png',  ox: 268, oy: 330 },
+      { id: 'paw',  src: 'assets/petparts/rabbit_paw.png',   ox: 100, oy: 410 }
+    ] },
+  dog: { W: 413, H: 440, base: 'assets/petparts/dog_base.png',
+    parts: [
+      { id: 'earL', src: 'assets/petparts/dog_earL.png', ox: 60,  oy: 292 },
+      { id: 'earR', src: 'assets/petparts/dog_earR.png', ox: 388, oy: 262 },
+      { id: 'paw',  src: 'assets/petparts/dog_paw.png',   ox: 362, oy: 388 }
+    ] }
+};
+const PART_LAYER = { ear: 'earL', earR: 'earR', tail: 'tail', paw: 'paw' };
+function petLayersHtml(role) {
+  const c = PET_PARTS[role]; if (!c) return `<img class="sp-img" src="${PET_IMG[role]}" alt="">`;
+  let h = `<div class="sp-layers"><img class="spl spl-base" src="${c.base}" alt="">`;
+  for (const p of c.parts) h += `<img class="spl spl-part" data-part="${p.id}" src="${p.src}" alt="" style="--px:${(p.ox / c.W * 100).toFixed(2)}%;--py:${(p.oy / c.H * 100).toFixed(2)}%">`;
+  return h + `</div>`;
 }
+function petLayersNode(role) { const c = PET_PARTS[role]; if (!c) return null; const el = document.createElement('div'); el.className = 'sp-layers'; el.innerHTML = petLayersHtml(role); return el; }
+
 /* 脏污：超过 7 天没洗澡 → 变脏 */
 const DAY_MS = 86400000;
 function lastBathTs(role) { const st = care(role); if (!st.lastBath) { st.lastBath = st.ts || Date.now(); saveLocalState(); } return st.lastBath; }
 function dirtyDays(role) { return Math.floor((Date.now() - lastBathTs(role)) / DAY_MS); }
 function isDirty(role) { try { return dirtyDays(role) >= 7; } catch (e) { return false; } }
-
-/* 互动瞬间：把 PNG 切到矢量形态，只动被摸的部位 */
-const PART_TO_CLASS = { head: 'v-head', ear: 'v-ear', earR: 'v-earR', tail: 'v-tail', paw: 'v-paw', nose: 'v-nose', belly: 'v-belly', body: 'v-happy', mouth: 'v-nose' };
-const vecTimers = {};
-function showVecForm(role, part, mood, dur) {
-  const pet = stagePetDom(role); if (!pet) return;
-  const fig = pet.querySelector('.sp-fig'); if (!fig) return;
-  const moodUse = mood || currentMood(role);
-  let vec = fig.querySelector('.sp-vec');
-  if (!vec) { vec = document.createElement('div'); vec.className = 'sp-vec'; fig.appendChild(vec); }
-  if (vec.dataset.mood !== moodUse) { vec.dataset.mood = moodUse; vec.innerHTML = petVecSvg(role, moodUse); }
-  fig.classList.add('vec-on');
-  vec.classList.remove('v-head', 'v-ear', 'v-earR', 'v-tail', 'v-paw', 'v-nose', 'v-happy', 'v-belly');
-  void vec.offsetWidth;
-  vec.classList.add(PART_TO_CLASS[part] || 'v-happy');
-  clearTimeout(vecTimers[role]);
-  vecTimers[role] = setTimeout(() => hideVecForm(role), dur || 2600);
-}
-function hideVecForm(role) {
-  const pet = stagePetDom(role); if (!pet) return;
-  const fig = pet.querySelector('.sp-fig');
-  if (fig) { fig.classList.remove('vec-on'); const v = fig.querySelector('.sp-vec'); if (v) v.remove(); }
-  clearTimeout(vecTimers[role]);
-}
 
 /* ================= 真 3D 舞台（Three.js）桥接 ================= */
 const P3D_VER = '20260909b';
@@ -942,7 +798,7 @@ function stagePetHtml(role, big, pos) {
   const dirty = isDirty(role);
   return `<div class="stage-pet scene-pet ${big ? 'big' : 'mini'} pos-${pos} ${dirty ? 'dirty' : ''}" data-role="${role}">
     <div class="sp-name">${petEmoji(role)} ${esc(pet.name)} <i>Lv.${expToLevel(pet.exp)}</i></div>
-    <div class="sp-fig">${out}<img class="sp-img" src="${PET_IMG[role]}" alt="">${dirty ? '<span class="sp-dirt"></span>' : ''}${zones}<span class="pet-aura"></span></div>
+    <div class="sp-fig">${out}${petLayersHtml(role)}${dirty ? '<span class="sp-dirt"></span>' : ''}${zones}<span class="pet-aura"></span></div>
     <div class="sp-shadow"></div>
     <div class="sp-bubble"></div>
     <div class="pet-zzz"><i>Z</i><i>z</i><i>z</i></div>
@@ -950,10 +806,17 @@ function stagePetHtml(role, big, pos) {
 }
 function renderStagePets(atWork) {
   const host = $('#petStagePets'); if (!host) return;
+  const together = !atWork && otherPet();      // 在家 + 对方也在 → 同地模式（两只一样大）
   const legacyHtml = () => {
-    let html = stagePetHtml(auth.role, !atWork, atWork ? 'workA' : 'center');
-    if (otherPet()) html += stagePetHtml(otherRole(), false, atWork ? 'workB' : 'side');
-    else html += `<div class="stage-empty">🏠 还有点空<br>等 TA 来~</div>`;
+    let html;
+    if (together) {
+      // 同地：两只都是 duo 大小（一样大），分别站左右
+      html = stagePetHtml(auth.role, false, 'duoA') + stagePetHtml(otherRole(), false, 'duoB');
+    } else {
+      html = stagePetHtml(auth.role, !atWork, atWork ? 'workA' : 'center');
+      if (otherPet()) html += stagePetHtml(otherRole(), false, atWork ? 'workB' : 'side');
+      else html += `<div class="stage-empty">🏠 还有点空<br>等 TA 来~</div>`;
+    }
     return html;
   };
   if (P3Dmode === '3d' && P3Dmod) {
@@ -994,11 +857,42 @@ function floatEmoji(emoji, pet, mode) {
   el.style.left = clamp(x, 6, 94) + '%'; el.style.top = clamp(y, 16, 82) + '%';
   layer.appendChild(el); setTimeout(() => el.remove(), 1400);
 }
+/* 摸哪动哪：原图水彩拆层（base + 各部位 PNG），只对被摸的层做 spring 动画。
+   没有切片的部位（头/肚子/鼻子/嘴/全身）→ 走 .sp-fig 整体微弹。 */
+const partAnimTimers = {};
+function pulsePartLayer(role, part, dur) {
+  const pet = document.querySelector(`.stage-pet[data-role="${role}"]`); if (!pet) return;
+  const fig = pet.querySelector('.sp-fig'); if (!fig) return;
+  const layers = fig.querySelectorAll('.spl-part');
+  const layerId = PART_LAYER[part];
+  const animCls = 'pt-' + (layerId || 'fig');
+  /* 切到对应层（没有就退到 sp-fig 整体） */
+  let target = layerId ? fig.querySelector(`.spl-part[data-part="${layerId}"]`) : null;
+  if (!target) target = fig;
+  /* 清理上一次动画，避免动画停留 */
+  layers.forEach((el) => { el.classList.remove('pt-earL', 'pt-earR', 'pt-tail', 'pt-paw', 'pt-fig'); });
+  fig.classList.remove('pt-earL', 'pt-earR', 'pt-tail', 'pt-paw', 'pt-fig');
+  void target.offsetWidth;                                     // 重启动画
+  target.classList.add(animCls);
+  clearTimeout(partAnimTimers[role + ':' + (layerId || 'fig')]);
+  partAnimTimers[role + ':' + (layerId || 'fig')] = setTimeout(() => target.classList.remove(animCls), dur || 950);
+}
+/* 心情小徽章：浮在宠物头顶，1 秒后淡出，不动水彩脸 */
+const moodBadgeTimers = {};
+function showMoodBadge(pet, emoji, dur) {
+  if (!pet) return;
+  const fig = pet.querySelector('.sp-fig'); if (!fig) return;
+  let b = fig.querySelector('.mood-badge');
+  if (!b) { b = document.createElement('span'); b.className = 'mood-badge'; fig.appendChild(b); }
+  b.textContent = emoji;
+  fig.classList.remove('mood-on'); void fig.offsetWidth; fig.classList.add('mood-on');
+  clearTimeout(moodBadgeTimers[pet.dataset.role || 'x']);
+  moodBadgeTimers[pet.dataset.role || 'x'] = setTimeout(() => { if (b) b.remove(); fig.classList.remove('mood-on'); }, dur || 1100);
+}
 function reactPart(role, part) {
   const pet = document.querySelector(`.stage-pet[data-role="${role}"]`); if (!pet) return;
   const r = PET_REACT[part] || PET_REACT.body;
-  // 摸哪动哪：切到矢量形态，只动被摸的部位（耳朵/尾巴/爪子…）
-  showVecForm(role, part);
+  pulsePartLayer(role, part);
   floatEmoji(r.emoji, pet);
   bub(pet, r.lines[Math.floor(Math.random() * r.lines.length)]);
   sfx(r.sound || 'pop');
@@ -1097,15 +991,15 @@ async function doFeed(role, foodId, skipPush) {
   const food = foodOf(foodId); const st = care(role); const e = effCare(role);
   const like = tasteOf(role, food);
   if (like <= 0) {
-    // 😤 挑食：嫌弃 → 生气表情（真·换脸），心情下降
+    // 😤 挑食：嫌弃 → 心情下降 + 头部小弹 + 生气表情徽章（保持水彩脸不动）
     st.happy = clamp(e.happy - 5, 0, 100); st.clean = clamp(e.clean - 1, 0, 100); st.ts = Date.now(); saveLocalState();
     const lines = role === 'rabbit'
       ? ['我吃素的！拿走拿走~', '闻了闻…嫌弃.jpg', '才不要！哼 😤']
       : ['我不是兔子！这个不吃', '苦的辣的我才不要！', '嫌弃…拿走拿走'];
     const pet = stagePetDom(role);
     if (pet) {
-      setVecMood(role, 'angry', 3400);
-      showVecForm(role, 'nose', 'angry', 3400);
+      pulsePartLayer(role, 'head', 1100);
+      showMoodBadge(pet, '😠', 1100);
       floatEmoji('😠', pet); bub(pet, randomOf(lines));
       pet.classList.add('aura'); setTimeout(() => pet.classList.remove('aura'), 750);
     }
@@ -1114,8 +1008,8 @@ async function doFeed(role, foodId, skipPush) {
   st.hunger = 100; st.happy = clamp(e.happy + (like === 2 ? 12 : 8), 0, 100); st.clean = clamp(e.clean - 4, 0, 100); st.ts = Date.now(); st.fed = todayStr(); saveLocalState();
   const pet = stagePetDom(role);
   if (pet) {
-    setVecMood(role, 'happy', 2600);
-    showVecForm(role, 'happy', 'happy', 2600);
+    pulsePartLayer(role, 'head', 1100);
+    showMoodBadge(pet, like === 2 ? '❤️' : '✨', 1100);
     floatEmoji(food.emoji, pet); bub(pet, like === 2 ? `${food.emoji} 是我最爱！吧唧吧唧` : `${food.emoji} 好吃~ 吧唧吧唧`);
   }
   sfx('munch'); renderPetStats(); if (!skipPush) await push(true);
@@ -1146,7 +1040,7 @@ function openBath(role) {
     <div class="bath-head"><b>🛁 洗澡时间 · ${petEmoji(role)}${esc(pet.name)}</b><button class="b-x" id="bathX">✕</button></div>
     <div class="bath-steps"><i class="on" data-s="1">① 冲水</i><i data-s="2">② 搓泡泡</i><i data-s="3">③ 擦干净</i></div>
     <div class="bath-body" id="bathBody">
-      <div class="bath-pet ${dirty ? 'dirt' : ''}" id="bathPet">${petVecSvg(role, dirty ? 'sad' : 'happy')}</div>
+      <div class="bath-pet ${dirty ? 'dirt' : ''}" id="bathPet">${petLayersHtml(role)}</div>
       <div class="bath-fx" id="bathFx"></div>
     </div>
     <div class="bath-bar"><b id="bathBar" style="width:0%"></b></div>
@@ -1249,7 +1143,7 @@ async function finishBath() {
   closeBath();
   confetti(14); sfx('splash'); toast('✨ 洗得白白净净，干净 +100');
   const pet = stagePetDom(role);
-  if (pet) { setVecMood(role, 'happy', 2800); showVecForm(role, 'happy', 'happy', 2800); floatEmoji('✨', pet); bub(pet, '香喷喷~ 谢谢你帮我洗澡 💕'); }
+  if (pet) { pulsePartLayer(role, 'head', 1100); showMoodBadge(pet, '✨', 1100); floatEmoji('✨', pet); bub(pet, '香喷喷~ 谢谢你帮我洗澡 💕'); }
   renderPetStats(); renderHome(); await push(true);
 }
 async function doSleep(role) {

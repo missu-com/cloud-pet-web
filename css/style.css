@@ -1328,9 +1328,11 @@ body.at-work .stage-vignette { background: radial-gradient(120% 90% at 50% 18%, 
 .stage-pet.pos-side { right: 6%; }
 .stage-pet.pos-workA { left: 9%; bottom: 20%; }
 .stage-pet.pos-workB { right: 9%; bottom: 24%; }
+.stage-pet.pos-duoA { left: 8%; bottom: 14%; width: min(38vw, 170px); }      /* 在家同地：自己站左，和对方一样大 */
+.stage-pet.pos-duoB { right: 8%; bottom: 14%; width: min(38vw, 170px); }     /* 在家同地：对方站右 */
 .stage-pet .sp-name { position: static; left: auto; transform: none; }
 .stage-pet .sp-fig { position: relative; width: 100%; }
-.stage-pet .sp-img { animation: breathe 3.4s ease-in-out infinite; }
+.stage-pet .sp-layers { animation: breathe 3.4s ease-in-out infinite; filter: drop-shadow(0 8px 12px rgba(0,0,0,.22)); }
 .stage-pet.big .sp-name { font-size: 13.5px; }
 .pet-zone { position: absolute; border-radius: 50%; cursor: pointer; transition: background .15s, transform .1s; }
 .pet-zone i { content: ''; position: absolute; inset: 0; border-radius: 50%; background: transparent; }
@@ -1470,31 +1472,37 @@ body.p3d-mode .stage-pets .stage-empty:not(.p3d-empty) { display: none; }
   background: radial-gradient(50% 50% at 50% 50%, rgba(96, 56, 64, .32), rgba(96, 56, 64, 0) 68%); transition: none; }
 
 
-/* ================= 灵动矢量形态（互动瞬间：摸哪动哪 + 真表情） ================= */
-.sp-fig.vec-on .sp-img, .sp-fig.vec-on .scene-outfit, .sp-fig.vec-on .sp-dirt { visibility: hidden; }
-.sp-vec { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; z-index: 3; }
-.sp-vec svg.vec-svg { width: 88%; height: auto; display: block; overflow: visible; filter: drop-shadow(0 3px 6px rgba(90, 50, 60, 0.14)); }
-.sp-vec g.earL, .sp-vec g.earR, .sp-vec g.tail, .sp-vec g.pawR, .sp-vec g.pawG { transform-box: view-box; }
-@keyframes vecEarL { 0% { transform: rotate(0); } 35% { transform: rotate(-16deg); } 62% { transform: rotate(7deg); } 82% { transform: rotate(-5deg); } 100% { transform: rotate(0); } }
-@keyframes vecEarR { 0% { transform: rotate(0); } 35% { transform: rotate(16deg); } 62% { transform: rotate(-7deg); } 82% { transform: rotate(5deg); } 100% { transform: rotate(0); } }
-@keyframes vecTail { 0% { transform: rotate(0); } 25% { transform: rotate(-24deg); } 50% { transform: rotate(16deg); } 75% { transform: rotate(-14deg); } 100% { transform: rotate(0); } }
-@keyframes vecPaw { 0% { transform: rotate(0) translateY(0); } 40% { transform: rotate(-36deg) translateY(-7px); } 70% { transform: rotate(7deg); } 100% { transform: rotate(0); } }
-@keyframes vecBelly { 0%, 100% { transform: scale(1, 1); } 35% { transform: scale(1.07, .9); } 60% { transform: scale(.94, 1.08); } 80% { transform: scale(1.03, .97); } }
-@keyframes vecHappy { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-4.5%) scale(1.03, .97); } 70% { transform: translateY(0) scale(.98, 1.03); } }
-@keyframes vecNose { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(2%) scale(1.05, .95); } }
-.sp-vec.v-ear .earL { animation: vecEarL 0.95s var(--spring); }
-.sp-vec.v-earR .earR { animation: vecEarR 0.95s var(--spring); }
-.sp-vec.v-tail .tail { animation: vecTail 0.85s var(--spring); }
-.sp-vec.v-paw .pawR, .sp-vec.v-paw .pawG { animation: vecPaw 0.9s var(--spring); }
-.sp-vec.v-belly svg.vec-svg { animation: vecBelly 0.9s var(--spring); transform-origin: 50% 92%; }
-.sp-vec.v-happy svg.vec-svg { animation: vecHappy 0.9s var(--spring); }
-.sp-vec.v-nose svg.vec-svg { animation: vecNose 0.6s ease; }
-.sp-vec.v-head .earL { animation: vecEarL 1.05s var(--spring); }
-.sp-vec.v-head .earR { animation: vecEarR 1.05s var(--spring); }
-.sp-vec.v-head svg.vec-svg { animation: vecNose 0.6s ease; }
+
+/* ================= 水彩原图分层：base + 部位 PNG（摸哪动哪，全程水彩脸不动） ================= */
+.sp-layers { position: relative; width: 100%; }
+.spl-base { display: block; width: 100%; height: auto; }
+.spl-part { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;
+  transform-origin: var(--px, 50%) var(--py, 50%); will-change: transform; pointer-events: none; }
+/* 各部位 spring 动画：摸哪动哪，过冲回弹 */
+@keyframes ptEarL { 0%,100% { transform: rotate(0); } 35% { transform: rotate(-18deg); } 62% { transform: rotate(8deg); } 82% { transform: rotate(-4deg); } }
+@keyframes ptEarR { 0%,100% { transform: rotate(0); } 35% { transform: rotate(18deg); } 62% { transform: rotate(-8deg); } 82% { transform: rotate(4deg); } }
+@keyframes ptTail { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-22deg); } 55% { transform: rotate(14deg); } 80% { transform: rotate(-10deg); } }
+@keyframes ptPaw  { 0%,100% { transform: rotate(0) translateY(0); } 40% { transform: rotate(-26deg) translateY(-6px); } 70% { transform: rotate(6deg); } }
+@keyframes ptFig  { 0%,100% { transform: scale(1); } 35% { transform: scale(1.06, .94); } 60% { transform: scale(.97, 1.04); } 80% { transform: scale(1.02, .98); } }
+.spl-part.pt-earL { animation: ptEarL 0.95s var(--spring); }
+.spl-part.pt-earR { animation: ptEarR 0.95s var(--spring); }
+.spl-part.pt-tail { animation: ptTail 0.85s var(--spring); }
+.spl-part.pt-paw  { animation: ptPaw  0.9s  var(--spring); }
+.sp-fig.pt-fig      { animation: ptFig  0.9s  var(--spring); }
+/* 心情徽章：浮在宠物头顶，1 秒淡出 */
+.mood-badge { position: absolute; left: 50%; top: -10%; transform: translate(-50%, 0) scale(.6);
+  font-size: 28px; line-height: 1; pointer-events: none; z-index: 4;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,.18)); opacity: 0; }
+.sp-fig.mood-on .mood-badge { animation: moodPop 1.05s var(--spring) both; }
+@keyframes moodPop {
+  0%   { opacity: 0; transform: translate(-50%, 4px) scale(.5); }
+  20%  { opacity: 1; transform: translate(-50%, -8px) scale(1.18); }
+  60%  { opacity: 1; transform: translate(-50%, -16px) scale(1.05); }
+  100% { opacity: 0; transform: translate(-50%, -34px) scale(.95); }
+}
 
 /* ================= 脏污外观（7 天不洗澡） ================= */
-.stage-pet.dirty .sp-img { filter: saturate(.8) sepia(.14) brightness(.97); }
+.stage-pet.dirty .sp-layers { filter: saturate(.82) sepia(.14) brightness(.97); }
 .sp-dirt { position: absolute; inset: 5% 8%; pointer-events: none; border-radius: 50%; opacity: .85;
   background:
     radial-gradient(16% 11% at 32% 42%, rgba(122, 90, 58, .55), transparent 72%),
@@ -1512,7 +1520,7 @@ body.p3d-mode .stage-pets .stage-empty:not(.p3d-empty) { display: none; }
 .bath-steps i.on { background: #5D9CEC; color: #fff; box-shadow: 0 4px 10px rgba(93, 156, 236, .4); transform: scale(1.04); }
 .bath-body { position: relative; width: min(72vw, 300px); flex: 1; min-height: 0; display: flex; align-items: flex-end; justify-content: center; touch-action: none; }
 .bath-pet { position: relative; width: 86%; }
-.bath-pet svg.vec-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.bath-pet .sp-layers { width: 100%; display: block; filter: drop-shadow(0 6px 10px rgba(0,0,0,.18)); }
 .bath-pet.dirt::after { content: ''; position: absolute; inset: 5% 8%; pointer-events: none; border-radius: 50%; opacity: var(--dirt, .85);
   background:
     radial-gradient(16% 11% at 32% 42%, rgba(122, 90, 58, .55), transparent 72%),
