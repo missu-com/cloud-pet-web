@@ -1337,7 +1337,7 @@ body.at-work .stage-vignette { background: radial-gradient(120% 90% at 50% 18%, 
 .pet-zone.tapped { background: rgba(255, 150, 170, 0.22); transform: scale(.93); }
 .pet-aura { position: absolute; inset: -8% -8%; pointer-events: none; border-radius: 50%; opacity: 0; background: radial-gradient(55% 55% at 50% 50%, rgba(255, 183, 205, 0.5), transparent 70%); transition: opacity .35s; }
 .stage-pet.aura .pet-aura { opacity: 1; }
-.stage-empty { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; font-size: 14px; color: var(--text-light); background: rgba(255, 255, 255, 0.88); border-radius: 16px; padding: 16px 22px; pointer-events: none; }
+.stage-empty { position: absolute; top: 28%; left: 50%; transform: translate(-50%, -50%); text-align: center; font-size: 13px; color: var(--text-light); background: rgba(255, 255, 255, 0.5); border-radius: 14px; padding: 10px 18px; pointer-events: none; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
 .stage-pet .sp-shadow { bottom: -4px; }
 
 /* 气泡 / 睡觉Zzz */
@@ -1431,7 +1431,7 @@ body.at-work .stage-dock { background: rgba(200, 212, 255, 0.4); }
 #petStagePets { overflow: hidden; }
 #p3dCv { touch-action: none; }
 .stage-pets { cursor: pointer; }
-.p3d-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 2; pointer-events: none; text-align: center; color: #b08a97; font-size: 15px; line-height: 1.9; text-shadow: 0 1px 2px rgba(255,255,255,.7); }
+.p3d-empty { position: absolute; top: 28%; left: 50%; transform: translate(-50%,-50%); display: block; z-index: 2; pointer-events: none; text-align: center; color: #a28e97; font-size: 14px; line-height: 1.9; background: rgba(255,255,255,.52); border-radius: 14px; padding: 10px 18px; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); text-shadow: none; }
 .p3d-ui { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
 .p3d-names { position: absolute; top: 88px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; align-items: center; background: rgba(255,255,255,.55); color: #8f5f74; font-size: 12px; font-weight: 700; padding: 4px 13px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.10); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); white-space: nowrap; }
 .p3d-names i { font-style: normal; color: #c9a0b0; font-weight: 600; font-size: 10.5px; }

@@ -611,9 +611,8 @@ function care(role) { const p = state.pets[role]; if (!p) return defaultStats();
 
 /* ================= 真 3D 舞台（Three.js）桥接 ================= */
 const P3D_VER = '20260909b';
-let P3Dmod = null;      // pet2d.js 模块对象（奇迹暖暖风 SVG 立绘，API 与 pet3d 兼容）
-let P3Dmode = 'loading'; // '2d' | '3d' | 'loading'（初始 loading：首帧舞台先渲染 2D 兜底，后台拉起 3D，就绪后自动切换）
-let p3dPromise = null;
+let P3Dmod = null;      // 当前恒为 null：主舞台固定使用 watercolor PNG 平面模式（参考图造型）
+let P3Dmode = 'loading'; // '2d' | '3d' | 'loading'（现恒为 '2d'：水彩 PNG 立绘 + DOM 分区互动）
 let sleepState = {};    // role -> true/false（内存态：睡觉/醒来）
 /* 挑食表：rabbit / dog 对所有食物 id 的口味（2 爱吃 / 1 一般 / 0 嫌弃） */
 const TASTE = {
@@ -624,34 +623,12 @@ const P3D_FX_MAP = { head: 'poke-head', belly: 'poke-belly', ear: 'poke-ear', ea
 const REACT_FALLBACK = { tail: 'body', mouth: 'nose' };
 
 function ensurePet3D() {
-  if (p3dPromise) return p3dPromise;
-  p3dPromise = import('./pet2d.js?v=' + P3D_VER).then((m) => {
-    P3Dmod = m.Pet3D || m.default || m;
-    // 首次真正挂载时才判定可用（WebGL 失败 → 永久降级 2D）
-    if (P3Dmode === 'loading') {
-      const host = $('#petStagePets');
-      let ok = false;
-      try {
-        if (host && P3Dmod.attach(host, { onTap: p3dOnTap, onFail: p3dOnFail })) {
-          P3Dmod.setMode({ my: auth.role, atWork: sceneMode === 'work' });
-          P3Dmode = '3d';
-          document.body.classList.add('p3d-mode');
-          ok = true;
-        }
-      } catch (e) { console && console.warn && console.warn('pet3d attach fail', e); ok = false; }
-      if (!ok) {
-        if (P3Dmod && P3Dmod.destroy) { try { P3Dmod.destroy(); } catch (e2) {} }
-        P3Dmode = '2d'; P3Dmod = null;
-      }
-      if (document.querySelector('#tab-home.active')) renderStagePets(sceneMode === 'work');
-    }
-    return P3Dmod;
-  }).catch((e) => {
-    console && console.warn && console.warn('pet3d load fail', e);
-    P3Dmode = '2d'; P3Dmod = null;
-    return null;
-  });
-  return p3dPromise;
+  // 水彩 PNG 平面模式为默认与唯一模式（参考图造型，即「你之前做过的」版本）。
+  // 直接渲染 assets/pet_rabbit.png / pet_dog.png（透明背景水彩立绘），不再拉起卡通 SVG。
+  P3Dmode = '2d'; P3Dmod = null;
+  document.body.classList.remove('p3d-mode');
+  try { const cv = document.getElementById('p3dCv'); if (cv && cv.parentNode) cv.parentNode.removeChild(cv); } catch (e) {}
+  return null;
 }
 /* 真机 WebGL 崩溃/上下文丢失 → 切回 2D 平面舞台，绝不让页面白屏 */
 function p3dOnFail(reason) {
