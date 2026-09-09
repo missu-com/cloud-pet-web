@@ -610,7 +610,7 @@ function defaultStats() { return { hunger: 88, clean: 96, happy: 86, energy: 92,
 function care(role) { const p = state.pets[role]; if (!p) return defaultStats(); if (!p.stats) p.stats = defaultStats(); return p.stats; }
 
 /* ================= 真 3D 舞台（Three.js）桥接 ================= */
-const P3D_VER = '20260909a';
+const P3D_VER = '20260909b';
 let P3Dmod = null;      // pet2d.js 模块对象（奇迹暖暖风 SVG 立绘，API 与 pet3d 兼容）
 let P3Dmode = 'loading'; // '2d' | '3d' | 'loading'（初始 loading：首帧舞台先渲染 2D 兜底，后台拉起 3D，就绪后自动切换）
 let p3dPromise = null;

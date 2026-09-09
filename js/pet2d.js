@@ -18,21 +18,25 @@
 
 const VB_W = 300, VB_H = 400;
 
-/* ---------- 调色板（奇迹暖暖式奶油底 + 玫瑰暗部） ---------- */
+/* ---------- 调色板（水彩手绘：焦糖棕兔 / 奶油焦糖狗） ---------- */
 const PAL = {
   rabbit: {
-    furTop: '#FFFBF2', furMid: '#FBEED6', furLow: '#F3DCC2', furShadow: '#EAC3AE',
-    belly: '#FFFDF8', earOut: '#F6DDBE', earInA: '#FFD9E2', earInB: '#FFB9C9',
-    irisA: '#C08654', irisB: '#7A4626', pupil: '#33190D',
-    noseA: '#F5A3B0', noseB: '#E77F92', blush: '#FFA9BC',
-    line: '#6B4632', mouthIn: '#A6525E', tongue: '#FF97A8'
+    furTop: '#FDEFD2', furMid: '#EEC18A', furLow: '#D69E5B', furShadow: '#BA7C3E',
+    belly: '#FFFDF6', muzzle: '#FFF6E6',
+    earOut: '#D99F5B', earInA: '#F4C6AC', earInB: '#EAA38A',
+    irisA: '#8A5A2C', irisB: '#452611', pupil: '#241206',
+    noseA: '#C08A5C', noseB: '#A0683C', blush: '#F5A98C',
+    line: '#7A4E28', mouthIn: '#B26858', tongue: '#FFA0A8',
+    patchA: '', patchB: '', sparkle: '#FFF9E9'
   },
   dog: {
-    furTop: '#FFF8E8', furMid: '#FAE7C4', furLow: '#F0D2A0', furShadow: '#E2B98C',
-    belly: '#FFFCF3', earOut: '#F3CE96', earInA: '#FFD3DA', earInB: '#FBB3BF',
-    irisA: '#D8A45C', irisB: '#8A5424', pupil: '#3A1E0C',
-    noseA: '#A97B54', noseB: '#82573A', blush: '#FFA9B4',
-    line: '#5F4128', mouthIn: '#A6525E', tongue: '#FF97A8'
+    furTop: '#FFFCF3', furMid: '#FBEBCB', furLow: '#F0D3A3', furShadow: '#DFB985',
+    belly: '#FFFFF9', muzzle: '#FFFDF6',
+    earOut: '#DBA262', earInA: '#F6CBB0', earInB: '#EBA98B',
+    irisA: '#C98A4A', irisB: '#7A4A1C', pupil: '#2E1808',
+    noseA: '#7C4C30', noseB: '#4E2C16', blush: '#F7AC8E',
+    line: '#6B4423', mouthIn: '#B26858', tongue: '#FFA0A8',
+    patchA: '#D9A05C', patchB: '#C98B4E', sparkle: '#FFF6D8'
   }
 };
 
@@ -52,6 +56,12 @@ function gradDefs(p, uid) {
     <linearGradient id="g-belly-${uid}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="${p.belly}"/><stop offset="1" stop-color="${p.furMid}"/>
     </linearGradient>
+    <linearGradient id="g-muzzle-${uid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${p.muzzle}"/><stop offset="1" stop-color="${p.furMid}"/>
+    </linearGradient>
+    <radialGradient id="g-patch-${uid}" cx=".5" cy=".4" r=".85">
+      <stop offset="0" stop-color="${p.patchA || p.furLow}"/><stop offset="1" stop-color="${p.patchB || p.furShadow}"/>
+    </radialGradient>
     <radialGradient id="g-iris-${uid}" cx=".5" cy=".32" r=".85">
       <stop offset="0" stop-color="${p.irisA}"/><stop offset=".62" stop-color="${p.irisB}"/><stop offset="1" stop-color="#2E1608"/>
     </radialGradient>
@@ -86,34 +96,49 @@ function eyeSVG(p, uid, cx, cy, flip) {
   </g>`;
 }
 
+/* 四角星光（头顶装饰，参考图水彩狗自带的亮星） */
+function sparkSvg(p, uid, x, y, s) {
+  return `<path transform="translate(${x} ${y}) scale(${s}) rotate(${Math.floor(Math.random()*45)})"
+     d="M 0 -9 C 2 -2.4 2.4 -2 9 0 C 2.4 2 2 2.4 0 9 C -2 2.4 -2.4 2 -9 0 C -2.4 -2 -2 -2.4 0 -9 Z"
+     fill="${p.sparkle}" stroke="#FFF" stroke-width="1" opacity=".9"/>`;
+}
+
 function petSVG(role) {
   const p = PAL[role] || PAL.rabbit;
   const uid = role;
   const dog = role === 'dog';
 
-  /* 耳朵几何：兔=细长立耳(明显高过头顶)；狗=大垂耳(向下生长) */
+  /* 耳朵几何：兔=细长立耳；狗=宽大垂耳(焦糖) */
   const earUp = `
-      <path d="M 0 0 C -8 -4 -12 -28 -8 -58 C -5 -74 4 -78 9 -70 C 15 -46 12 -8 0 0 Z" fill="url(#g-ear-${uid})" stroke="${p.line}" stroke-width="2.2" stroke-linejoin="round"/>
-      <path d="M 0 -5 C -5 -8 -7 -26 -4 -46 C -2 -57 3 -61 6 -56 C 9 -42 6 -12 0 -5 Z" fill="url(#g-earin-${uid})" opacity=".9"/>`;
+      <path d="M 0 0 C -9 -5 -14 -30 -9 -60 C -6 -78 4 -83 10 -74 C 17 -48 13 -9 0 0 Z" fill="url(#g-ear-${uid})" stroke="${p.line}" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M 0 -6 C -5 -9 -8 -28 -5 -48 C -3 -60 3 -65 6 -59 C 9 -44 6 -13 0 -6 Z" fill="url(#g-earin-${uid})" opacity=".92"/>
+      <path d="M -2 -40 C -4 -50 -1 -62 4 -68" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity=".3"/>`;
   const earDown = `
-      <path d="M 0 0 C -17 6 -26 38 -19 70 C -15 87 7 90 13 72 C 21 42 14 5 0 0 Z" fill="url(#g-ear-${uid})" stroke="${p.line}" stroke-width="2.2" stroke-linejoin="round"/>
-      <path d="M -1 9 C -12 15 -18 40 -13 64 C -10 76 4 78 8 66 C 14 44 8 15 -1 9 Z" fill="url(#g-earin-${uid})" opacity=".9"/>`;
+      <path d="M 0 0 C -19 6 -29 40 -21 74 C -16 92 8 95 15 76 C 24 44 15 6 0 0 Z" fill="url(#g-ear-${uid})" stroke="${p.line}" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M -2 10 C -13 16 -20 42 -14 68 C -11 81 4 83 9 70 C 15 46 9 16 -2 10 Z" fill="url(#g-earin-${uid})" opacity=".92"/>
+      <path d="M -3 30 C -8 45 -7 62 -2 74" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity=".28"/>`;
 
-  /* 尾巴：兔=圆绒球(右侧)；狗=卷尾(右侧上翘) */
+  /* 尾巴：兔=焦糖圆绒球；狗=卷尾上翘 */
   const tailRabbit = `
       <g class="g-tail">
-        <circle cx="0" cy="0" r="21" fill="url(#g-tail-${uid})" stroke="${p.line}" stroke-width="2"/>
-        <circle cx="-6" cy="-6" r="8" fill="#FFFFFF" opacity=".65"/>
+        <circle cx="0" cy="0" r="22" fill="url(#g-tail-${uid})" stroke="${p.line}" stroke-width="2"/>
+        <circle cx="-6" cy="-6" r="8" fill="#FFFFFF" opacity=".55"/>
+        <path d="M -8 -6 C -12 -2 -12 6 -8 12" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" opacity=".5"/>
       </g>`;
   const tailDog = `
       <g class="g-tail">
         <path d="M 0 8 C -8 -6 -4 -24 12 -26 C 26 -28 32 -14 24 -6 C 30 -4 32 6 22 10 C 12 14 4 14 0 8 Z" fill="url(#g-tail-${uid})" stroke="${p.line}" stroke-width="2.2" stroke-linejoin="round"/>
-        <circle cx="16" cy="-16" r="6" fill="#FFFFFF" opacity=".6"/>
+        <circle cx="16" cy="-16" r="6" fill="#FFFFFF" opacity=".55"/>
       </g>`;
 
+  /* 头顶毛簇（兔=呆毛；狗=两侧焦糖斑 + 额斑） */
   const headTop = dog
-    ? `<path d="M 96 118 C 100 96 118 88 128 100 C 132 84 156 82 162 98 C 172 86 190 94 192 114" fill="none" stroke="${p.line}" stroke-width="2" stroke-linecap="round" opacity=".55"/>`
-    : `<path d="M 144 96 C 140 84 146 74 154 72 C 150 80 152 88 158 92" fill="none" stroke="${p.line}" stroke-width="2.1" stroke-linecap="round" opacity=".7"/>`;
+    ? `<ellipse cx="106" cy="120" rx="24" ry="22" fill="url(#g-patch-${uid})" opacity=".95"/>
+       <ellipse cx="194" cy="120" rx="24" ry="22" fill="url(#g-patch-${uid})" opacity=".95"/>
+       <ellipse cx="150" cy="106" rx="18" ry="12" fill="url(#g-patch-${uid})" opacity=".7"/>
+       <path d="M 96 118 C 100 96 118 88 128 100 C 132 84 156 82 162 98 C 172 86 190 94 192 114" fill="none" stroke="${p.line}" stroke-width="2" stroke-linecap="round" opacity=".5"/>`
+    : `<path d="M 150 96 C 138 90 128 100 128 100 C 132 87 141 83 150 83 C 159 83 168 87 172 100 C 172 100 162 90 150 96 Z" fill="url(#g-patch-${uid})" opacity=".6"/>
+       <path d="M 144 96 C 140 84 146 74 154 72 C 150 80 152 88 158 92" fill="none" stroke="${p.line}" stroke-width="2.1" stroke-linecap="round" opacity=".7"/>`;
 
   const svg = `<svg viewBox="0 0 ${VB_W} ${VB_H}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     ${gradDefs(p, uid)}
@@ -123,15 +148,25 @@ function petSVG(role) {
     </g>
     <!-- 身体 -->
     <g class="g-all">
+      ${dog ? `<g class="g-sparkle">
+          ${sparkSvg(p, uid, 238, 78, 1)}
+          ${sparkSvg(p, uid, 268, 118, .78)}
+          ${sparkSvg(p, uid, 84, 104, .82)}
+          ${sparkSvg(p, uid, 244, 178, .62)}
+        </g>` : `<g class="g-sparkle">
+          ${sparkSvg(p, uid, 226, 118, .5)}
+          ${sparkSvg(p, uid, 76, 150, .4)}
+        </g>`}
       <g class="g-body">
         <path d="M 150 206 C 106 206 88 238 86 274 C 84 314 112 342 150 342 C 188 342 216 314 214 274 C 212 238 194 206 150 206 Z"
               fill="url(#g-fur-${uid})" stroke="${p.line}" stroke-width="2.4" stroke-linejoin="round"/>
-        <path d="M 108 232 C 96 248 92 272 96 292" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity=".55"/>
-        <ellipse cx="150" cy="290" rx="43" ry="50" fill="url(#g-belly-${uid})"/>
+        <path d="M 108 232 C 96 248 92 272 96 292" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+        <path d="M 192 232 C 204 248 208 272 204 292" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity=".4"/>
+        <ellipse cx="150" cy="292" rx="42" ry="48" fill="url(#g-belly-${uid})"/>
         <ellipse cx="114" cy="340" rx="21" ry="13" fill="url(#g-fur-${uid})" stroke="${p.line}" stroke-width="2.2"/>
         <ellipse cx="186" cy="340" rx="21" ry="13" fill="url(#g-fur-${uid})" stroke="${p.line}" stroke-width="2.2"/>
       </g>
-      <!-- 前爪（左爪可举手挥动） -->
+      <!-- 前爪 -->
       <g class="g-paw g-pawL"><ellipse cx="128" cy="324" rx="12" ry="15" fill="url(#g-fur-${uid})" stroke="${p.line}" stroke-width="2.2"/>
         <path d="M 124 318 L 124 326 M 132 318 L 132 326" stroke="${p.line}" stroke-width="1.4" opacity=".4"/></g>
       <g class="g-paw g-pawR"><ellipse cx="172" cy="324" rx="12" ry="15" fill="url(#g-fur-${uid})" stroke="${p.line}" stroke-width="2.2"/>
@@ -142,28 +177,31 @@ function petSVG(role) {
         <g class="g-ear g-earR" transform="translate(172,113) rotate(${11})">${dog ? earDown : earUp}</g>
         <ellipse cx="150" cy="152" rx="63" ry="59" fill="url(#g-fur-${uid})" stroke="${p.line}" stroke-width="2.4"/>
         ${headTop}
-        <path d="M 92 138 C 86 148 86 160 90 170" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity=".6"/>
-        <ellipse cx="150" cy="196" rx="34" ry="22" fill="url(#g-belly-${uid})" opacity=".85"/>
+        <path d="M 92 138 C 86 148 86 160 90 170" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+        <path d="M 208 138 C 214 148 214 160 210 170" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity=".4"/>
+        <!-- 白色口鼻 -->
+        <ellipse cx="150" cy="186" rx="31" ry="22" fill="url(#g-muzzle-${uid})"/>
+        <ellipse cx="150" cy="198" rx="20" ry="13" fill="${p.muzzle}" opacity=".5"/>
         <!-- 腮红 -->
         <ellipse cx="107" cy="177" rx="15" ry="9" fill="url(#g-blush-${uid})"/>
         <ellipse cx="193" cy="177" rx="15" ry="9" fill="url(#g-blush-${uid})"/>
         <!-- 眉毛（生气时显形） -->
         <path class="g-brow g-browL" d="M 114 128 Q 126 122 137 127" fill="none" stroke="${p.line}" stroke-width="2.4" stroke-linecap="round" opacity="0"/>
         <path class="g-brow g-browR" d="M 163 127 Q 174 122 186 128" fill="none" stroke="${p.line}" stroke-width="2.4" stroke-linecap="round" opacity="0"/>
-        <!-- 眼睛 -->
-        <g class="g-eye g-eyeL">${eyeSVG(p, uid, 127, 152, 1)}</g>
-        <g class="g-eye g-eyeR">${eyeSVG(p, uid, 173, 152, -1)}</g>
-        <path class="g-lid g-lidL" d="M 115 152 Q 127 143 139 152" fill="none" stroke="${p.line}" stroke-width="2.2" stroke-linecap="round" opacity="0"/>
-        <path class="g-lid g-lidR" d="M 161 152 Q 173 143 185 152" fill="none" stroke="${p.line}" stroke-width="2.2" stroke-linecap="round" opacity="0"/>
-        <!-- 鼻子 + 嘴 -->
-        <path d="M 142 172 Q 150 167 158 172 Q 154 181 150 182.5 Q 146 181 142 172 Z" fill="url(#g-nose-${uid})" stroke="${p.line}" stroke-width="1.6" stroke-linejoin="round"/>
-        <path d="M 150 182.5 L 150 187" stroke="${p.line}" stroke-width="1.6" stroke-linecap="round"/>
+        <!-- 眼睛（参考图水灵大眼：眼白→渐变虹膜→大瞳孔→双高光→星芒→上睫毛） -->
+        <g class="g-eye g-eyeL">${eyeSVG(p, uid, 125, 152, 1)}</g>
+        <g class="g-eye g-eyeR">${eyeSVG(p, uid, 175, 152, -1)}</g>
+        <path class="g-lid g-lidL" d="M 113 152 Q 125 143 137 152" fill="none" stroke="${p.line}" stroke-width="2.2" stroke-linecap="round" opacity="0"/>
+        <path class="g-lid g-lidR" d="M 163 152 Q 175 143 187 152" fill="none" stroke="${p.line}" stroke-width="2.2" stroke-linecap="round" opacity="0"/>
+        <!-- 鼻子 + 嘴（落在口鼻白区上） -->
+        <path d="M 142 176 Q 150 171 158 176 Q 154 185 150 186.5 Q 146 185 142 176 Z" fill="url(#g-nose-${uid})" stroke="${p.line}" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M 150 186.5 L 150 191" stroke="${p.line}" stroke-width="1.6" stroke-linecap="round"/>
         <g class="g-mouth-c">
-          <path d="M 150 187 Q 144 193 138 190 M 150 187 Q 156 193 162 190" fill="none" stroke="${p.line}" stroke-width="2" stroke-linecap="round"/>
+          <path d="M 150 191 Q 144 197 138 194 M 150 191 Q 156 197 162 194" fill="none" stroke="${p.line}" stroke-width="2" stroke-linecap="round"/>
         </g>
         <g class="g-mouth-o" opacity="0">
-          <ellipse cx="150" cy="193" rx="9" ry="8" fill="${p.mouthIn}" stroke="${p.line}" stroke-width="1.8"/>
-          <path class="g-tongue" d="M 144 195 Q 150 204 156 195 Z" fill="${p.tongue}" opacity="0"/>
+          <ellipse cx="150" cy="197" rx="9" ry="8" fill="${p.mouthIn}" stroke="${p.line}" stroke-width="1.8"/>
+          <path class="g-tongue" d="M 144 199 Q 150 208 156 199 Z" fill="${p.tongue}" opacity="0"/>
         </g>
       </g>
     </g>
@@ -216,6 +254,7 @@ function PetStage2D() {
       gLidL: q('.g-lidL'), gLidR: q('.g-lidR'),
       gBrowL: q('.g-browL'), gBrowR: q('.g-browR'),
       gMouthC: q('.g-mouth-c'), gMouthO: q('.g-mouth-o'), gTongue: q('.g-tongue'),
+      gSparkle: q('.g-sparkle'),
       dog: role === 'dog', big,
       st: {
         role, sleep: false, speakUntil: 0, fx: null, fxT: 0,
@@ -397,6 +436,13 @@ function PetStage2D() {
     const tailBase = pet.dog ? -18 : 8;
     pet.gTailW.setAttribute('transform', `translate(${pet.dog ? 218 : 212},${pet.dog ? 252 : 262}) rotate(${(tailBase + tailX * .55 + Math.sin(T * wagFreq) * wagAmp - earCouple * .5).toFixed(2)})`);
 
+    /* 星光闪烁（参考图头顶亮星：低频呼吸 + 轻微漂浮） */
+    if (pet.gSparkle) {
+      const tw = 0.55 + 0.45 * Math.sin(T * 2.2 + p.phase * 3);
+      pet.gSparkle.setAttribute('opacity', (p.sleep ? .35 : tw).toFixed(2));
+      pet.gSparkle.setAttribute('transform', `translate(0,${(Math.sin(T * 1.1 + p.phase) * 2).toFixed(2)})`);
+    }
+
     /* 爪子挥动 */
     const pawRot = pose.pawWave > 0 ? -Math.abs(Math.sin(p.fxT * 14)) * 46 : 0;
     pet.gPawL.setAttribute('transform', `rotate(${pawRot.toFixed(1)} 128 336)`);
@@ -412,8 +458,8 @@ function PetStage2D() {
     }
     p.eyeY += (eyeTarget - p.eyeY) * Math.min(1, dt * 16);
     const lid = p.eyeY < .3 ? 1 : 0;
-    setTr(pet.gEyeL, `translate(127,152) scale(1,${Math.max(.05, p.eyeY).toFixed(3)}) translate(-127,-152)`);
-    setTr(pet.gEyeR, `translate(173,152) scale(1,${Math.max(.05, p.eyeY).toFixed(3)}) translate(-173,-152)`);
+    setTr(pet.gEyeL, `translate(125,152) scale(1,${Math.max(.05, p.eyeY).toFixed(3)}) translate(-125,-152)`);
+    setTr(pet.gEyeR, `translate(175,152) scale(1,${Math.max(.05, p.eyeY).toFixed(3)}) translate(-175,-152)`);
     pet.gLidL.setAttribute('opacity', lid ? 1 : 0);
     pet.gLidR.setAttribute('opacity', lid ? 1 : 0);
 
@@ -443,7 +489,7 @@ function PetStage2D() {
     const openO = Math.min(1, jaw * 2.4);
     pet.gMouthC.setAttribute('opacity', (1 - openO).toFixed(2));
     pet.gMouthO.setAttribute('opacity', openO.toFixed(2));
-    pet.gMouthO.setAttribute('transform', `translate(150,187) scale(1,${(0.25 + jaw * .95).toFixed(3)}) translate(-150,-187)`);
+    pet.gMouthO.setAttribute('transform', `translate(150,191) scale(1,${(0.25 + jaw * .95).toFixed(3)}) translate(-150,-191)`);
     pet.gTongue.setAttribute('opacity', Math.min(1, pose.tongue + (pet.dog && pose.eyeSq > .8 ? .8 : 0)).toFixed(2));
 
     /* 影子随跳跃缩放 */
