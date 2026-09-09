@@ -610,8 +610,8 @@ function defaultStats() { return { hunger: 88, clean: 96, happy: 86, energy: 92,
 function care(role) { const p = state.pets[role]; if (!p) return defaultStats(); if (!p.stats) p.stats = defaultStats(); return p.stats; }
 
 /* ================= 真 3D 舞台（Three.js）桥接 ================= */
-const P3D_VER = '20260908e';
-let P3Dmod = null;      // pet3d.js 模块对象
+const P3D_VER = '20260909a';
+let P3Dmod = null;      // pet2d.js 模块对象（奇迹暖暖风 SVG 立绘，API 与 pet3d 兼容）
 let P3Dmode = 'loading'; // '2d' | '3d' | 'loading'（初始 loading：首帧舞台先渲染 2D 兜底，后台拉起 3D，就绪后自动切换）
 let p3dPromise = null;
 let sleepState = {};    // role -> true/false（内存态：睡觉/醒来）
@@ -625,7 +625,7 @@ const REACT_FALLBACK = { tail: 'body', mouth: 'nose' };
 
 function ensurePet3D() {
   if (p3dPromise) return p3dPromise;
-  p3dPromise = import('./pet3d.js?v=' + P3D_VER).then((m) => {
+  p3dPromise = import('./pet2d.js?v=' + P3D_VER).then((m) => {
     P3Dmod = m.Pet3D || m.default || m;
     // 首次真正挂载时才判定可用（WebGL 失败 → 永久降级 2D）
     if (P3Dmode === 'loading') {
@@ -1062,8 +1062,6 @@ function decorItemsHtml(interactive) {
 function renderHome() {
   const atWork = sceneMode === 'work';
   document.body.classList.toggle('at-work', atWork);   // 全局氛围切换（CSS 冷/暖色调）
-  const sc = sceneInfo();
-  $('#sceneInfo').innerHTML = `<span class="scene-chip bb">${sc.emoji} ${sc.label}</span><span class="scene-chip bb">${sc.weather}</span><span class="scene-chip bb">${atWork ? '💼 上班中' : '🏠 在家'}</span>`;
   const bg = atWork ? SCENE_IMG.work : wallImg((state.wallpaper && state.wallpaper.v) || 'cream');
   const bgEl = $('#stageBg'); if (bgEl) bgEl.src = bg;
   renderStagePets(atWork);      // 汤姆猫式大宠物 + 抚摸分区

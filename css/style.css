@@ -1459,3 +1459,13 @@ body.at-work .stage-dock { background: rgba(200, 212, 255, 0.4); }
 .pet-stage.tray-open .stage-hint { opacity: 0; }
 .fd-ghost { position: fixed; left: 0; top: 0; transform: translate(-50%, -78%); font-size: 44px; line-height: 1; pointer-events: none; z-index: 999; filter: drop-shadow(0 6px 8px rgba(0,0,0,.28)); }
 body.p3d-mode .stage-pets .stage-empty:not(.p3d-empty) { display: none; }
+
+/* ---------- pet2d：奇迹暖暖风 SVG 立绘舞台 ---------- */
+.p2d-root { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.p2d-grab { position: absolute; inset: 0; touch-action: none; pointer-events: auto; }
+.p2d-pet { position: absolute; pointer-events: none; will-change: transform; }
+.p2d-pet svg { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 3px 6px rgba(90, 50, 60, 0.14)); }
+.p2d-pet.flip svg { transform: scaleX(-1); }
+.p2d-shadow { position: absolute; left: 50%; bottom: -2.5%; width: 62%; height: 9%; transform: translateX(-50%); border-radius: 50%;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(96, 56, 64, .32), rgba(96, 56, 64, 0) 68%); transition: none; }
+
