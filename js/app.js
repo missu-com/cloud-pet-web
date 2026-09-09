@@ -5,7 +5,7 @@
 'use strict';
 
 /* ===== 启动自检 / 防白屏兜底（必须最先执行） ===== */
-window.__APP_VER = '20260908e';
+window.__APP_VER = '20260910a';
 (function () {
   function ensureSplash() {
     var s = document.getElementById('bootSplash');
@@ -373,6 +373,8 @@ function ensureStateShape(s) {
   s.pets = s.pets || {};
   // 给每个宠物补上照料状态（饱食/干净/开心/精力），旧缓存也安全
   for (const r of ROLES) if (s.pets[r] && !s.pets[r].stats) s.pets[r].stats = defaultStats();
+  // 脏污系统兜底：旧数据没有 lastBath 的，从当前时间起算（不会一上来就变脏）
+  for (const r of ROLES) if (s.pets[r] && s.pets[r].stats && !s.pets[r].stats.lastBath) s.pets[r].stats.lastBath = s.pets[r].stats.ts || Date.now();
   s.roomDecor = Array.isArray(s.roomDecor) ? s.roomDecor : [];
   // 清洗小屋摆件：过滤掉 FURNITURES 里不存在的 itemId（旧/脏数据），并保证坐标可用，杜绝渲染崩溃
   const validFur = new Set(FURNITURES.map((f) => f.id));
@@ -585,15 +587,18 @@ const PET_ZONES = {
     { part: 'ear',   x: 6,  y: 1,  w: 28, h: 22, icon: '🪶' },
     { part: 'earR',  x: 66, y: 1,  w: 28, h: 22, icon: '🪶' },
     { part: 'nose',  x: 36, y: 28, w: 28, h: 14, icon: '👃' },
-    { part: 'belly', x: 24, y: 50, w: 52, h: 42, icon: '🤍' }
+    { part: 'belly', x: 24, y: 50, w: 52, h: 32, icon: '🤍' },
+    { part: 'paw',   x: 26, y: 78, w: 48, h: 20, icon: '🐾' },
+    { part: 'tail',  x: 70, y: 44, w: 28, h: 26, icon: '🌀' }
   ],
   dog: [
     { part: 'head',  x: 24, y: 14, w: 52, h: 34, icon: '😊' },
     { part: 'ear',   x: 6,  y: 8,  w: 30, h: 26, icon: '🐶' },
     { part: 'earR',  x: 64, y: 8,  w: 30, h: 26, icon: '🐶' },
     { part: 'nose',  x: 40, y: 32, w: 20, h: 16, icon: '👃' },
-    { part: 'belly', x: 30, y: 55, w: 42, h: 32, icon: '🤍' },
-    { part: 'paw',   x: 12, y: 70, w: 26, h: 24, icon: '🐾' }
+    { part: 'belly', x: 30, y: 55, w: 42, h: 26, icon: '🤍' },
+    { part: 'paw',   x: 12, y: 70, w: 26, h: 24, icon: '🐾' },
+    { part: 'tail',  x: 0,  y: 44, w: 24, h: 30, icon: '🌀' }
   ]
 };
 const PET_REACT = {
@@ -603,11 +608,190 @@ const PET_REACT = {
   nose:  { emoji: '🌸', anim: 'anim-purr',   sound: 'boop',   lines: ['哼哼~ 闻到了好吃的', '鼻子酸酸哒'] },
   belly: { emoji: '🤣', anim: 'anim-laugh',  sound: 'giggle', lines: ['哈哈哈好痒~~~', '噗，别戳肚子！'] },
   paw:   { emoji: '✋', anim: 'anim-wave',   sound: 'pop',    lines: ['击掌！', '咯咯咯拍到啦~'] },
+  tail:  { emoji: '🌀', anim: 'anim-wag',    sound: 'pop',    lines: ['尾巴摇起来啦~', '开心到转圈圈！'] },
   body:  { emoji: '💛', anim: 'anim-happy',  sound: 'purr',   lines: ['再摸摸~', '好呀好呀~', '最喜欢你啦'] }
 };
 
-function defaultStats() { return { hunger: 88, clean: 96, happy: 86, energy: 92, ts: Date.now(), fed: '', bathe: '', slept: '' }; }
+function defaultStats() { return { hunger: 88, clean: 96, happy: 86, energy: 92, ts: Date.now(), fed: '', bathe: '', slept: '', lastBath: Date.now() }; }
 function care(role) { const p = state.pets[role]; if (!p) return defaultStats(); if (!p.stats) p.stats = defaultStats(); return p.stats; }
+
+/* ================= 灵动矢量形态（方案 C：平时原图 PNG，互动瞬间切矢量，摸哪动哪） ================= */
+function rabbitSVG(mood) {
+  const uid = 'r' + Math.random().toString(36).slice(2, 7);
+  const ang = mood === 'angry';
+  const sad = mood === 'sad';
+  const mouth = ang
+    ? `<path d="M146 208 Q150 200 154 208" fill="none" stroke="#7a4a3a" stroke-width="3.4" stroke-linecap="round"/>`
+    : sad
+    ? `<path d="M140 208 Q150 200 160 208" fill="none" stroke="#7a4a3a" stroke-width="2.6" stroke-linecap="round"/>`
+    : `<path d="M136 202 Q144 210 150 202 Q156 210 164 202" fill="none" stroke="#8a5a44" stroke-width="2.6" stroke-linecap="round"/>`;
+  const brows = ang
+    ? `<g stroke="#4a3120" stroke-width="4.6" stroke-linecap="round">
+         <path d="M102 154 Q120 160 136 156" fill="none"/>
+         <path d="M218 154 Q200 160 184 156" fill="none"/></g>`
+    : sad
+    ? `<g stroke="#7a6a5a" stroke-width="3.6" stroke-linecap="round" opacity=".75">
+         <path d="M106 158 Q122 150 136 158" fill="none"/>
+         <path d="M214 158 Q198 150 184 158" fill="none"/></g>`
+    : ``;
+  const eyes = sad
+    ? `<g><circle cx="120" cy="170" r="5.6" fill="#32241f"/><circle cx="200" cy="170" r="5.6" fill="#32241f"/>
+         <circle cx="119.5" cy="174" r="1.9" fill="#fff"/><circle cx="199.5" cy="174" r="1.9" fill="#fff"/></g>`
+    : `<g><circle cx="120" cy="167" r="6.4" fill="#32241f"/><circle cx="200" cy="167" r="6.4" fill="#32241f"/>
+         <circle cx="122" cy="165" r="2.2" fill="#fff"/><circle cx="202" cy="165" r="2.2" fill="#fff"/>
+         <circle cx="118" cy="169" r="1.2" fill="#fff" opacity=".7"/><circle cx="198" cy="169" r="1.2" fill="#fff" opacity=".7"/></g>`;
+  const tear = sad ? `<ellipse cx="206" cy="178" rx="3.4" ry="5.4" fill="#a9d4f0" opacity=".9"/>` : ``;
+  const mark = ang ? `<g transform="translate(238,92)"><text y="0" font-size="26">💢</text></g>` : ``;
+  const spark = (!ang && !sad) ? `<g stroke="#ffd35e" stroke-width="2.4" stroke-linecap="round"><path d="M44 84 l0 12M38 90 l12 0" /><path d="M272 150 l0 10M267 155 l10 0"/></g>` : ``;
+  return `<svg class="vec-svg" viewBox="0 0 320 340" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="${uid}b" cx="42%" cy="30%" r="80%"><stop offset="0%" stop-color="#eec58f"/><stop offset="62%" stop-color="#dd9f66"/><stop offset="100%" stop-color="#c47f49"/></radialGradient>
+    <radialGradient id="${uid}h" cx="45%" cy="32%" r="85%"><stop offset="0%" stop-color="#f6d3a4"/><stop offset="70%" stop-color="#e9b979"/><stop offset="100%" stop-color="#d99f5e"/></radialGradient>
+    <linearGradient id="${uid}ie" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f9cad4"/><stop offset="100%" stop-color="#f3a7ba"/></linearGradient>
+    <filter id="${uid}bl" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.2"/></filter>
+    <filter id="${uid}so" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6"/></filter>
+  </defs>
+  <ellipse cx="160" cy="322" rx="92" ry="11" fill="rgba(120,60,90,.16)" filter="url(#${uid}so)"/>
+  <ellipse cx="160" cy="252" rx="66" ry="60" fill="url(#${uid}b)" opacity=".96"/>
+  <ellipse cx="160" cy="262" rx="38" ry="40" fill="#fff2de"/>
+  <g fill="#c47f49" opacity=".5" filter="url(#${uid}bl)">
+    <ellipse cx="112" cy="286" rx="20" ry="13"/><ellipse cx="208" cy="286" rx="20" ry="13"/><ellipse cx="160" cy="300" rx="24" ry="9"/>
+  </g>
+  <g class="earL" style="transform-origin:116px 138px">
+    <ellipse cx="118" cy="86" rx="18" ry="54" transform="rotate(-9 118 86)" fill="url(#${uid}b)"/>
+    <ellipse cx="118" cy="92" rx="8.5" ry="41" transform="rotate(-9 118 86)" fill="url(#${uid}ie)"/>
+  </g>
+  <g class="earR" style="transform-origin:202px 138px">
+    <ellipse cx="202" cy="86" rx="18" ry="54" transform="rotate(9 202 86)" fill="url(#${uid}b)"/>
+    <ellipse cx="202" cy="92" rx="8.5" ry="41" transform="rotate(9 202 86)" fill="url(#${uid}ie)"/>
+  </g>
+  <ellipse cx="160" cy="180" rx="60" ry="54" fill="url(#${uid}h)"/>
+  <ellipse cx="160" cy="204" rx="32" ry="23" fill="#fff4e4"/>
+  <ellipse cx="160" cy="190" rx="7" ry="5.4" fill="#e07a7a"/><ellipse cx="158.6" cy="188.4" rx="2" ry="1.4" fill="#ffd9d9"/>
+  ${mouth}${brows}${eyes}${tear}
+  <g stroke="#cdb59f" stroke-width="1.3" fill="none" opacity=".9">
+    <path d="M96 190 Q122 192 138 194"/><path d="M92 199 Q120 201 136 200"/>
+    <path d="M224 190 Q198 192 182 194"/><path d="M228 199 Q200 201 184 200"/>
+  </g>
+  <ellipse cx="104" cy="200" rx="12" ry="7" fill="#ffb6c3" opacity=".55"/><ellipse cx="216" cy="200" rx="12" ry="7" fill="#ffb6c3" opacity=".55"/>
+  <g class="pawG" style="transform-origin:160px 296px">
+    <ellipse cx="124" cy="296" rx="17" ry="11" fill="#f9e6c8"/><ellipse cx="196" cy="296" rx="17" ry="11" fill="#f9e6c8"/>
+  </g>
+  <g class="tail" style="transform-origin:246px 250px">
+    <ellipse cx="250" cy="242" rx="16" ry="13" fill="#eec58f"/>
+    <ellipse cx="252" cy="239" rx="8" ry="6" fill="#fbeed6"/>
+  </g>
+  ${mark}${spark}
+</svg>`; }
+function dogSVG(mood) {
+  const uid = 'd' + Math.random().toString(36).slice(2, 7);
+  const ang = mood === 'angry', sad = mood === 'sad';
+  const tongue = ang || sad ? `` : `<ellipse cx="160" cy="200" rx="8.5" ry="8" fill="#f58ba0"/><path d="M160 194 v10" stroke="#d96a80" stroke-width="1.6"/>`;
+  const mouth = ang
+    ? `<path d="M148 192 Q160 184 172 192" fill="none" stroke="#6b4a32" stroke-width="3.2" stroke-linecap="round"/>`
+    : sad
+    ? `<path d="M146 194 Q160 186 174 194" fill="none" stroke="#6b4a32" stroke-width="2.6" stroke-linecap="round"/>`
+    : `<path d="M140 192 Q150 200 160 192 Q170 200 180 192" fill="none" stroke="#6b4a32" stroke-width="2.4" stroke-linecap="round"/>`;
+  const brows = ang
+    ? `<g stroke="#4a3120" stroke-width="4.4" stroke-linecap="round"><path d="M102 136 Q120 142 138 138" fill="none"/><path d="M218 136 Q200 142 182 138" fill="none"/></g>`
+    : sad
+    ? `<g stroke="#7a6a5a" stroke-width="3.4" stroke-linecap="round" opacity=".75"><path d="M106 142 Q122 134 138 142" fill="none"/><path d="M214 142 Q198 134 182 142" fill="none"/></g>`
+    : ``;
+  const eyes = sad
+    ? `<g><circle cx="130" cy="152" r="8" fill="#5b3a22"/><circle cx="190" cy="152" r="8" fill="#5b3a22"/><circle cx="129" cy="156" r="2.4" fill="#fff"/><circle cx="189" cy="156" r="2.4" fill="#fff"/></g>`
+    : `<g><circle cx="130" cy="150" r="9.5" fill="#5b3a22"/><circle cx="190" cy="150" r="9.5" fill="#5b3a22"/>
+         <circle cx="133" cy="147" r="3.4" fill="#fff"/><circle cx="193" cy="147" r="3.4" fill="#fff"/>
+         <circle cx="127" cy="153" r="1.6" fill="#fff" opacity=".75"/><circle cx="187" cy="153" r="1.6" fill="#fff" opacity=".75"/></g>`;
+  const tear = sad ? `<ellipse cx="196" cy="164" rx="3.6" ry="5.8" fill="#a9d4f0" opacity=".9"/>` : ``;
+  const mark = ang ? `<g transform="translate(246,80)"><text y="0" font-size="26">💢</text></g>` : ``;
+  const star = (!ang && !sad) ? `<g class="spark"><path d="M196 96 l3.2 8.4 8.4 3.2 -8.4 3.2 -3.2 8.4 -3.2 -8.4 -8.4 -3.2 8.4 -3.2 Z" fill="#ffd35e" stroke="#f0a93e" stroke-width="1.2" stroke-linejoin="round"/></g>` : ``;
+  const cream = "#fff6e6", creamD = "#f3e2c8", patch = "#d9a05f";
+  return `<svg class="vec-svg" viewBox="0 0 320 340" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="${uid}so" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6"/></filter>
+  </defs>
+  <ellipse cx="160" cy="322" rx="98" ry="11" fill="rgba(120,60,90,.16)" filter="url(#${uid}so)"/>
+  <g class="tail" style="transform-origin:76px 262px">
+    <circle cx="74" cy="262" r="15" fill="${creamD}"/><circle cx="62" cy="274" r="11" fill="${creamD}"/><circle cx="82" cy="276" r="10" fill="${creamD}"/><circle cx="70" cy="268" r="9" fill="${cream}"/>
+  </g>
+  <ellipse cx="160" cy="268" rx="72" ry="60" fill="${cream}"/>
+  <g fill="${cream}">
+    <circle cx="96" cy="270" r="13"/><circle cx="110" cy="288" r="12"/><circle cx="130" cy="300" r="13"/><circle cx="156" cy="306" r="13"/><circle cx="184" cy="300" r="12"/><circle cx="206" cy="286" r="12"/><circle cx="222" cy="266" r="13"/><circle cx="222" cy="240" r="12"/>
+  </g>
+  <g fill="${creamD}" opacity=".8">
+    <circle cx="100" cy="282" r="9"/><circle cx="122" cy="296" r="9"/><circle cx="148" cy="303" r="9"/><circle cx="176" cy="298" r="9"/><circle cx="202" cy="282" r="9"/><circle cx="216" cy="252" r="8"/>
+  </g>
+  <g opacity=".92">
+    <ellipse cx="192" cy="238" rx="30" ry="20" transform="rotate(-18 192 238)" fill="${patch}"/>
+    <ellipse cx="208" cy="258" rx="16" ry="12" transform="rotate(-18 208 258)" fill="#c98d53"/>
+  </g>
+  <g class="pawR" style="transform-origin:196px 232px">
+    <ellipse cx="198" cy="228" rx="14" ry="12" transform="rotate(-18 198 228)" fill="${cream}"/>
+    <path d="M192 224 q4 -5 8 0 M200 222 q3 -6 7 1" stroke="#e6cfae" stroke-width="1.6" fill="none"/>
+  </g>
+  <g class="earL" style="transform-origin:98px 132px">
+    <ellipse cx="98" cy="176" rx="17" ry="36" transform="rotate(16 98 176)" fill="${patch}"/>
+    <ellipse cx="96" cy="184" rx="8" ry="24" transform="rotate(16 98 176)" fill="#f6e0d8"/>
+  </g>
+  <g class="earR" style="transform-origin:222px 132px">
+    <ellipse cx="222" cy="176" rx="17" ry="36" transform="rotate(-16 222 176)" fill="${patch}"/>
+    <ellipse cx="224" cy="184" rx="8" ry="24" transform="rotate(-16 222 176)" fill="#f6e0d8"/>
+  </g>
+  <ellipse cx="160" cy="150" rx="62" ry="46" fill="${cream}"/>
+  <g fill="${cream}">
+    <circle cx="118" cy="116" r="13"/><circle cx="142" cy="108" r="13"/><circle cx="166" cy="108" r="12"/><circle cx="196" cy="118" r="12"/><circle cx="104" cy="150" r="11"/><circle cx="216" cy="150" r="11"/>
+  </g>
+  <g fill="${creamD}" opacity=".85">
+    <circle cx="108" cy="124" r="8"/><circle cx="134" cy="112" r="8"/><circle cx="162" cy="110" r="8"/><circle cx="192" cy="118" r="8"/><circle cx="214" cy="142" r="8"/>
+  </g>
+  <ellipse cx="112" cy="128" rx="22" ry="14" transform="rotate(-16 112 128)" fill="${patch}" opacity=".85"/>
+  <ellipse cx="160" cy="180" rx="27" ry="20" fill="#fffdf4"/>
+  <ellipse cx="160" cy="172" rx="7.4" ry="5.6" fill="#4a3226"/><ellipse cx="158.6" cy="170" rx="2.2" ry="1.4" fill="#fff" opacity=".8"/>
+  ${mouth}${tongue}${brows}${eyes}${tear}
+  <ellipse cx="110" cy="176" rx="10" ry="6.4" fill="#ffb3be" opacity=".6"/><ellipse cx="210" cy="176" rx="10" ry="6.4" fill="#ffb3be" opacity=".6"/>
+  ${star}${mark}
+</svg>`; }
+function petVecSvg(role, mood) { return role === 'dog' ? dogSVG(mood) : rabbitSVG(mood); }
+
+/* 心情（瞬时表情记忆 + 脏污/低心情兜底） */
+const VEC_MOOD_MEM = {};   // role -> { mood, until }
+function setVecMood(role, mood, ms) { VEC_MOOD_MEM[role] = { mood: mood, until: Date.now() + (ms || 2600) }; }
+function currentMood(role) {
+  const m = VEC_MOOD_MEM[role];
+  if (m && m.until > Date.now()) return m.mood;
+  if (isDirty(role)) return 'sad';
+  try { if (effCare(role).happy < 30) return 'sad'; } catch (e) {}
+  return 'happy';
+}
+/* 脏污：超过 7 天没洗澡 → 变脏 */
+const DAY_MS = 86400000;
+function lastBathTs(role) { const st = care(role); if (!st.lastBath) { st.lastBath = st.ts || Date.now(); saveLocalState(); } return st.lastBath; }
+function dirtyDays(role) { return Math.floor((Date.now() - lastBathTs(role)) / DAY_MS); }
+function isDirty(role) { try { return dirtyDays(role) >= 7; } catch (e) { return false; } }
+
+/* 互动瞬间：把 PNG 切到矢量形态，只动被摸的部位 */
+const PART_TO_CLASS = { head: 'v-head', ear: 'v-ear', earR: 'v-earR', tail: 'v-tail', paw: 'v-paw', nose: 'v-nose', belly: 'v-belly', body: 'v-happy', mouth: 'v-nose' };
+const vecTimers = {};
+function showVecForm(role, part, mood, dur) {
+  const pet = stagePetDom(role); if (!pet) return;
+  const fig = pet.querySelector('.sp-fig'); if (!fig) return;
+  const moodUse = mood || currentMood(role);
+  let vec = fig.querySelector('.sp-vec');
+  if (!vec) { vec = document.createElement('div'); vec.className = 'sp-vec'; fig.appendChild(vec); }
+  if (vec.dataset.mood !== moodUse) { vec.dataset.mood = moodUse; vec.innerHTML = petVecSvg(role, moodUse); }
+  fig.classList.add('vec-on');
+  vec.classList.remove('v-head', 'v-ear', 'v-earR', 'v-tail', 'v-paw', 'v-nose', 'v-happy', 'v-belly');
+  void vec.offsetWidth;
+  vec.classList.add(PART_TO_CLASS[part] || 'v-happy');
+  clearTimeout(vecTimers[role]);
+  vecTimers[role] = setTimeout(() => hideVecForm(role), dur || 2600);
+}
+function hideVecForm(role) {
+  const pet = stagePetDom(role); if (!pet) return;
+  const fig = pet.querySelector('.sp-fig');
+  if (fig) { fig.classList.remove('vec-on'); const v = fig.querySelector('.sp-vec'); if (v) v.remove(); }
+  clearTimeout(vecTimers[role]);
+}
 
 /* ================= 真 3D 舞台（Three.js）桥接 ================= */
 const P3D_VER = '20260909b';
@@ -747,15 +931,18 @@ function renderPetStats() {
   const el = $('#petStats'); if (!el) return;
   const e = effCare(auth.role);
   const pill = (em, val) => `<span class="stat-pill ${val < 35 ? 'low' : ''}">${em}<b>${val}</b></span>`;
-  el.innerHTML = pill('🍖', e.hunger) + pill('🫧', e.clean) + pill('😊', e.happy) + pill('🔋', e.energy);
+  let html = pill('🍖', e.hunger) + pill('🫧', e.clean) + pill('😊', e.happy) + pill('🔋', e.energy);
+  if (isDirty(auth.role)) html += `<span class="stat-pill low">🛁<b>${dirtyDays(auth.role)}天没洗澡</b></span>`;
+  el.innerHTML = html;
 }
 function stagePetHtml(role, big, pos) {
   const pet = state.pets[role]; if (!pet) return '';
   const out = outfitAnchorImg(pet.outfit, 'scene-outfit') || '';
   const zones = (PET_ZONES[role] || []).map((z) => `<span class="pet-zone" data-role="${role}" data-part="${z.part}" data-icon="${z.icon}" style="left:${z.x}%;top:${z.y}%;width:${z.w}%;height:${z.h}%"></span>`).join('');
-  return `<div class="stage-pet scene-pet ${big ? 'big' : 'mini'} pos-${pos}" data-role="${role}">
+  const dirty = isDirty(role);
+  return `<div class="stage-pet scene-pet ${big ? 'big' : 'mini'} pos-${pos} ${dirty ? 'dirty' : ''}" data-role="${role}">
     <div class="sp-name">${petEmoji(role)} ${esc(pet.name)} <i>Lv.${expToLevel(pet.exp)}</i></div>
-    <div class="sp-fig">${out}<img class="sp-img" src="${PET_IMG[role]}" alt="">${zones}<span class="pet-aura"></span></div>
+    <div class="sp-fig">${out}<img class="sp-img" src="${PET_IMG[role]}" alt="">${dirty ? '<span class="sp-dirt"></span>' : ''}${zones}<span class="pet-aura"></span></div>
     <div class="sp-shadow"></div>
     <div class="sp-bubble"></div>
     <div class="pet-zzz"><i>Z</i><i>z</i><i>z</i></div>
@@ -809,8 +996,9 @@ function floatEmoji(emoji, pet, mode) {
 }
 function reactPart(role, part) {
   const pet = document.querySelector(`.stage-pet[data-role="${role}"]`); if (!pet) return;
-  const r = PET_REACT[part] || PET_REACT.body; const fig = pet.querySelector('.sp-fig');
-  if (fig) { fig.classList.remove('anim-happy', 'anim-wiggle', 'anim-laugh', 'anim-wave', 'anim-purr', 'anim-eat'); void fig.offsetWidth; fig.classList.add(r.anim); setTimeout(() => fig.classList.remove(r.anim), 1400); }
+  const r = PET_REACT[part] || PET_REACT.body;
+  // 摸哪动哪：切到矢量形态，只动被摸的部位（耳朵/尾巴/爪子…）
+  showVecForm(role, part);
   floatEmoji(r.emoji, pet);
   bub(pet, r.lines[Math.floor(Math.random() * r.lines.length)]);
   sfx(r.sound || 'pop');
@@ -852,13 +1040,14 @@ let feedTrayEl = null, feedTrayTimer = null;
 function openFeed() {
   const stage = $('#petStage'); if (!stage) return;
   closeFeedTray();
+  const together = state && state.mode && state.mode.v === MODE_TOGETHER && otherPet();
   const items = (PET_FOODS[auth.role] || PET_FOODS.rabbit).map((f) => {
     const tag = f.like === 2 ? '<u class="ft-heart">❤</u>' : (f.like === 0 ? '<u class="ft-no">✗</u>' : '<u class="ft-ok">○</u>');
     return `<span class="ft-item ${f.like === 2 ? 'love' : (f.like === 0 ? 'no' : '')}" data-food="${f.id}" data-emoji="${f.emoji}" data-name="${f.name}"><i class="ft-em">${f.emoji}</i><b>${f.name}</b>${tag}</span>`;
   }).join('');
   const t = document.createElement('div');
   t.id = 'feedTray'; t.className = 'feed-tray';
-  t.innerHTML = `<div class="ft-head"><span>🍽️ 喂 ${petEmoji(auth.role)}${esc(myName())}：<b class="ft-tip">按住拖到 TA 嘴边</b>，或轻点喂自己</span><button class="ft-x" data-x="1">✕</button></div><div class="ft-items">${items}</div><div class="ft-legend">❤ 最爱 · ○ 还行 · ✗ 不喜欢</div>`;
+  t.innerHTML = `<div class="ft-head"><span>🍽️ 喂 ${petEmoji(auth.role)}${esc(myName())}：<b class="ft-tip">${together ? '在一起 · 喂一次两只都吃' : '按住拖到 TA 嘴边，或轻点喂自己'}</b></span><button class="ft-x" data-x="1">✕</button></div><div class="ft-items">${items}</div><div class="ft-legend">❤ 最爱 · ○ 还行 · ✗ 不喜欢${together ? ' · 🐰🐶 同地两只一起吃' : ''}</div>`;
   stage.appendChild(t); feedTrayEl = t;
   stage.classList.add('tray-open');
   const x = t.querySelector('.ft-x'); if (x) x.addEventListener('click', closeFeedTray);
@@ -880,10 +1069,10 @@ function startFeedDrag(it, ev) {
     it.removeEventListener('pointermove', move); it.removeEventListener('pointerup', end); it.removeEventListener('pointercancel', end);
     if (g.parentNode) g.parentNode.removeChild(g);
     const isTap = !moved || Math.hypot(e.clientX - startX, e.clientY - startY) < 12;
-    if (isTap) { closeFeedTray(); doFeed(auth.role, foodId); return; }   // 轻点 = 喂自己
+    if (isTap) { closeFeedTray(); feedBoth(auth.role, foodId); return; }   // 轻点 = 喂自己（同地两只都吃）
     const hit = feedTargetAt(e.clientX, e.clientY);
     const role = (hit && hit.role) ? hit.role : auth.role;               // 拖到别人身上就喂别人
-    closeFeedTray(); doFeed(role, foodId);
+    closeFeedTray(); feedBoth(role, foodId);
   };
   it.addEventListener('pointermove', move); it.addEventListener('pointerup', end); it.addEventListener('pointercancel', end);
   g.style.left = startX + 'px'; g.style.top = startY + 'px';
@@ -904,51 +1093,164 @@ function p3dBubbles(on) {
   for (let i = 0; i < 22; i++) { const b = document.createElement('span'); b.className = 'bub'; b.style.left = (4 + Math.random() * 92) + '%'; b.style.setProperty('--d', String(Math.round(Math.random() * 4))); l.appendChild(b); }
   host.appendChild(l);
 }
-async function doFeed(role, foodId) {
+async function doFeed(role, foodId, skipPush) {
   const food = foodOf(foodId); const st = care(role); const e = effCare(role);
   const like = tasteOf(role, food);
   if (like <= 0) {
-    // 😤 挑食：嫌弃 → 扭头 + 生气，心情下降
+    // 😤 挑食：嫌弃 → 生气表情（真·换脸），心情下降
     st.happy = clamp(e.happy - 5, 0, 100); st.clean = clamp(e.clean - 1, 0, 100); st.ts = Date.now(); saveLocalState();
     const lines = role === 'rabbit'
       ? ['我吃素的！拿走拿走~', '闻了闻…嫌弃.jpg', '才不要！哼 😤']
       : ['我不是兔子！这个不吃', '苦的辣的我才不要！', '嫌弃…拿走拿走'];
-    if (P3Dmode === '3d' && P3Dmod) { P3Dmod.act(role, 'reject'); say3D(role, randomOf(lines)); emoji3D(role, '😖'); }
-    else {
-      const pet = stagePetDom(role);
-      if (pet) { floatEmoji('😖', pet); bub(pet, randomOf(lines)); const fig = pet.querySelector('.sp-fig'); if (fig) { fig.classList.remove('anim-wiggle'); void fig.offsetWidth; fig.classList.add('anim-wiggle'); setTimeout(() => fig.classList.remove('anim-wiggle'), 1400); } pet.classList.add('aura'); setTimeout(() => pet.classList.remove('aura'), 750); }
+    const pet = stagePetDom(role);
+    if (pet) {
+      setVecMood(role, 'angry', 3400);
+      showVecForm(role, 'nose', 'angry', 3400);
+      floatEmoji('😠', pet); bub(pet, randomOf(lines));
+      pet.classList.add('aura'); setTimeout(() => pet.classList.remove('aura'), 750);
     }
-    sfx('boop'); renderPetStats(); await push(true); return;
+    sfx('boop'); renderPetStats(); if (!skipPush) await push(true); return;
   }
   st.hunger = 100; st.happy = clamp(e.happy + (like === 2 ? 12 : 8), 0, 100); st.clean = clamp(e.clean - 4, 0, 100); st.ts = Date.now(); st.fed = todayStr(); saveLocalState();
-  if (P3Dmode === '3d' && P3Dmod) {
-    P3Dmod.act(role, 'eat');
-    say3D(role, like === 2 ? `${food.emoji} 是我最爱！吧唧吧唧` : `${food.emoji} 好吃~ 吧唧吧唧`, 2200);
-    emoji3D(role, like === 2 ? '🤤' : '😋');
-    setTimeout(() => { if (P3Dmode === '3d' && P3Dmod && !sleepState[role]) P3Dmod.act(role, 'happy'); }, 950);
-  } else {
-    const pet = stagePetDom(role); const fig = pet && pet.querySelector('.sp-fig');
-    if (fig) { fig.classList.remove('anim-eat'); void fig.offsetWidth; fig.classList.add('anim-eat'); setTimeout(() => fig.classList.remove('anim-eat'), 2500); }
-    floatEmoji(food.emoji, pet); bub(pet, `${food.emoji} 太好吃啦~ 吧唧吧唧`); sfx('munch');
+  const pet = stagePetDom(role);
+  if (pet) {
+    setVecMood(role, 'happy', 2600);
+    showVecForm(role, 'happy', 'happy', 2600);
+    floatEmoji(food.emoji, pet); bub(pet, like === 2 ? `${food.emoji} 是我最爱！吧唧吧唧` : `${food.emoji} 好吃~ 吧唧吧唧`);
   }
-  sfx('munch'); renderPetStats(); await push(true);
+  sfx('munch'); renderPetStats(); if (!skipPush) await push(true);
 }
-async function doBathe(role) {
-  const st = care(role); const e = effCare(role);
-  st.clean = 100; st.happy = clamp(e.happy + 5, 0, 100); st.ts = Date.now(); st.bathe = todayStr(); saveLocalState();
-  const stage = $('#petStage');
-  if (P3Dmode === '3d' && P3Dmod) {
-    if (stage) stage.classList.add('bathing');
-    sfx('splash'); p3dBubbles(true); P3Dmod.act(role, 'happy'); say3D(role, '🫧 泡泡浴~ 好舒服');
-    setTimeout(() => { if (stage) stage.classList.remove('bathing'); p3dBubbles(false); if (P3Dmod && P3Dmode === '3d') { P3Dmod.act(role, 'happy'); } floatEmoji('✨'); say3D(role, '洗得香喷喷✨'); }, 3000);
+/* 同地模式：喂一次，两只都吃 */
+async function feedBoth(role, foodId) {
+  const together = state && state.mode && state.mode.v === MODE_TOGETHER && otherPet();
+  if (together) {
+    await Promise.all([doFeed(role, foodId, true), doFeed(otherRole(), foodId, true)]);
+    await push(true);
+    toast(`💞 在一起 · ${petEmoji(role)} 和 ${petEmoji(otherRole())} 一起吃啦`);
+  } else await doFeed(role, foodId);
+}
+/* ---------- 洗澡三步界面：冲水 → 搓泡泡 → 擦干净 ---------- */
+let bathEl = null, bathState = null;
+function closeBath() {
+  if (bathEl) { bathEl.remove(); bathEl = null; }
+  const stg = $('#petStage'); if (stg) stg.classList.remove('bathing');
+  bathState = null;
+}
+function openBath(role) {
+  const stage = $('#petStage'); if (!stage) return;
+  closeBath(); closeFeedTray();
+  const pet = (state.pets || {})[role]; if (!pet) return;
+  const dirty = isDirty(role);
+  bathEl = document.createElement('div'); bathEl.id = 'bathUI'; bathEl.className = 'bath-ui';
+  bathEl.innerHTML = `
+    <div class="bath-head"><b>🛁 洗澡时间 · ${petEmoji(role)}${esc(pet.name)}</b><button class="b-x" id="bathX">✕</button></div>
+    <div class="bath-steps"><i class="on" data-s="1">① 冲水</i><i data-s="2">② 搓泡泡</i><i data-s="3">③ 擦干净</i></div>
+    <div class="bath-body" id="bathBody">
+      <div class="bath-pet ${dirty ? 'dirt' : ''}" id="bathPet">${petVecSvg(role, dirty ? 'sad' : 'happy')}</div>
+      <div class="bath-fx" id="bathFx"></div>
+    </div>
+    <div class="bath-bar"><b id="bathBar" style="width:0%"></b></div>
+    <div class="bath-tip" id="bathTip">🚿 按住下方按钮冲水，把身上的脏东西冲掉</div>
+    <button class="bath-act" id="bathAct">🚿 按住冲水</button>`;
+  stage.appendChild(bathEl);
+  stage.classList.add('bathing');
+  if (dirty) $('#bathPet').style.setProperty('--dirt', '.85');
+  bathState = { role: role, step: 1, prog: 0, lastPt: null };
+  $('#bathX').addEventListener('click', closeBath);
+  bindBathStep();
+}
+function setBathStep(n) {
+  const b = bathState; if (!b || !bathEl) return;
+  b.step = n; b.prog = 0; b.lastPt = null;
+  bathEl.querySelectorAll('.bath-steps i').forEach((i) => i.classList.toggle('on', +i.dataset.s <= n));
+  const tip = $('#bathTip'), act = $('#bathAct');
+  if (n === 1) { tip.textContent = '🚿 按住下方按钮冲水，把身上的脏东西冲掉'; act.textContent = '🚿 按住冲水'; }
+  if (n === 2) { tip.textContent = '🫧 在宠物身上点一点/搓一搓，搓出满身泡泡'; act.textContent = '🫧 快速点我加泡泡'; }
+  if (n === 3) { tip.textContent = '🧖 按住宠物左右擦一擦，把泡泡擦干净'; act.textContent = '🧖 在宠物身上擦'; }
+  const bar = $('#bathBar'); if (bar) bar.style.width = '0%';
+  const fx = $('#bathFx'); if (fx) fx.innerHTML = '';
+  bindBathStep();
+}
+function bathProgress(p) {
+  const b = bathState; if (!b) return;
+  b.prog = Math.min(100, b.prog + p);
+  const bar = $('#bathBar'); if (bar) bar.style.width = b.prog + '%';
+  if (b.step === 1) { const pet = $('#bathPet'); if (pet) pet.style.setProperty('--dirt', String(Math.max(0, .85 * (1 - b.prog / 100)))); }
+  if (b.prog >= 100) { if (b.step < 3) { sfx('pop'); setBathStep(b.step + 1); } else finishBath(); }
+}
+function dropWater() {
+  const fx = $('#bathFx'); if (!fx) return;
+  const s = document.createElement('span'); s.className = 'drop';
+  s.style.left = (8 + Math.random() * 84) + '%';
+  fx.appendChild(s); setTimeout(() => s.remove(), 620);
+}
+function bindBathStep() {
+  const b = bathState; if (!b || !bathEl) return;
+  const act = $('#bathAct'), body = $('#bathBody');
+  if (act) { act.onpointerdown = null; act.onpointerup = null; act.onpointercancel = null; }
+  if (body) { body.onpointerdown = null; body.onpointermove = null; body.onpointerup = null; body.onpointercancel = null; }
+  if (b.step === 1) {
+    let holding = false;
+    const tick = () => {
+      if (!bathState || bathState.step !== 1) return;
+      if (holding) {
+        bathProgress(100 / 150);            // 约 1.5 秒按住冲满
+        if (Math.random() < .6) dropWater();
+        if (Math.random() < .1) sfx('splash');
+      }
+      requestAnimationFrame(tick);
+    };
+    act.onpointerdown = (e) => { try { act.setPointerCapture(e.pointerId); } catch (err) {} holding = true; bathEl.classList.add('rinsing'); };
+    const stop = () => { holding = false; bathEl.classList.remove('rinsing'); };
+    act.onpointerup = stop; act.onpointercancel = stop;
+    requestAnimationFrame(tick);
+  } else if (b.step === 2) {
+    const addBub = (e) => {
+      const fx = $('#bathFx'); if (!fx) return;
+      const r = body.getBoundingClientRect();
+      const s = document.createElement('span'); s.className = 'bub-big';
+      s.style.left = clamp(((e.clientX - r.left) / r.width) * 100, 4, 96) + '%';
+      s.style.top = clamp(((e.clientY - r.top) / r.height) * 100, 4, 96) + '%';
+      s.style.setProperty('--sz', Math.round(18 + Math.random() * 22) + 'px');
+      fx.appendChild(s); sfx('pop'); bathProgress(8.5);
+    };
+    body.onpointerdown = addBub;
+    act.onpointerdown = (e) => { addBub(e); addBub(e); addBub(e); };
   } else {
-    const pet = stagePetDom(role);
-    if (stage && pet) {
-      stage.classList.add('bathing'); pet.classList.add('bathing'); spawnBubbles(pet); sfx('splash'); bub(pet, '🫧 泡泡浴~ 好舒服');
-      setTimeout(() => { stage.classList.remove('bathing'); pet.classList.remove('bathing'); clearBubbles(pet); floatEmoji('✨', pet); bub(pet, '洗得香喷喷~'); }, 2800);
-    }
+    let towel = bathEl.querySelector('.towel');
+    if (!towel) { towel = document.createElement('span'); towel.className = 'towel'; towel.textContent = '🧖'; bathEl.appendChild(towel); }
+    towel.classList.add('show');
+    let wiping = false;
+    body.onpointerdown = (e) => {
+      wiping = true; try { body.setPointerCapture(e.pointerId); } catch (err) {}
+      const r = bathEl.getBoundingClientRect();
+      towel.style.left = (e.clientX - r.left) + 'px'; towel.style.top = (e.clientY - r.top) + 'px';
+    };
+    body.onpointermove = (e) => {
+      const r = bathEl.getBoundingClientRect();
+      towel.style.left = (e.clientX - r.left) + 'px'; towel.style.top = (e.clientY - r.top) + 'px';
+      if (!wiping) return;
+      if (bathState.lastPt) {
+        const d = Math.hypot(e.clientX - bathState.lastPt.x, e.clientY - bathState.lastPt.y);
+        if (d > 3) { bathProgress(Math.min(3.5, d * .38)); if (Math.random() < .25) sfx('boop'); }
+      }
+      bathState.lastPt = { x: e.clientX, y: e.clientY };
+    };
+    const stopWipe = () => { wiping = false; bathState.lastPt = null; };
+    body.onpointerup = stopWipe; body.onpointercancel = stopWipe;
+    act.onpointerdown = () => { toast('👇 按住宠物身上，左右擦一擦'); };
   }
-  renderPetStats(); await push(true);
+}
+async function finishBath() {
+  const b = bathState; if (!b) return;
+  const role = b.role;
+  const st = care(role); const e = effCare(role);
+  st.clean = 100; st.happy = clamp(e.happy + 8, 0, 100); st.ts = Date.now(); st.bathe = todayStr(); st.lastBath = Date.now(); saveLocalState();
+  closeBath();
+  confetti(14); sfx('splash'); toast('✨ 洗得白白净净，干净 +100');
+  const pet = stagePetDom(role);
+  if (pet) { setVecMood(role, 'happy', 2800); showVecForm(role, 'happy', 'happy', 2800); floatEmoji('✨', pet); bub(pet, '香喷喷~ 谢谢你帮我洗澡 💕'); }
+  renderPetStats(); renderHome(); await push(true);
 }
 async function doSleep(role) {
   const st = care(role); const e = effCare(role);
@@ -999,10 +1301,10 @@ function talkPet(role) {
 function runDock(act) {
   const role = auth.role;
   if (act === 'feed') openFeed();
-  else if (act === 'bathe') doBathe(role);
+  else if (act === 'bathe') openBath(role);
   else if (act === 'sleep') doSleep(role);
   else if (act === 'talk') talkPet(role);
-  else if (act === 'help') toast('👆 摸它的头/耳朵/肚子/爪子有不同反应；喂食·洗澡·睡觉·说话都在下面哦');
+  else if (act === 'help') toast('👆 摸哪动哪：头·耳朵·尾巴·肚子·爪子各有反应；喂食·洗澡(三步)·睡觉·说话都在下面哦');
 }
 function toggleSheet(open) {
   const s = $('#homeSheet'); if (!s) return;
@@ -1170,10 +1472,13 @@ function maybeInteract() {
     hearts(7);
     const hl = $('#stageFloat'); if (hl) { const p = document.createElement('span'); p.className = 'float-emoji'; p.textContent = '💞 默契 +'; p.style.left = '45%'; p.style.top = '40%'; hl.appendChild(p); setTimeout(() => p.remove(), 1400); }
   } else if (act === 1) {
-    // 宠物说话
+    // 宠物说话（脏了会提醒洗澡）
     const role = rolesAlive[Math.floor(Math.random() * rolesAlive.length)];
     const el = document.querySelector(`.stage-pet[data-role="${role}"] .sp-bubble`);
-    const line = PET_LINES[Math.floor(Math.random() * PET_LINES.length)];
+    const dirtyRoles = rolesAlive.filter((r) => isDirty(r));
+    const line = (dirtyRoles.length && Math.random() < .5)
+      ? '身上痒痒的…想洗澡 🛁'
+      : PET_LINES[Math.floor(Math.random() * PET_LINES.length)];
     if (el) { el.textContent = line; el.classList.add('show'); setTimeout(() => { el.classList.remove('show'); el.textContent = ''; }, 3400); }
   } else {
     // 蹦跶一下
@@ -1570,9 +1875,18 @@ async function doCheckin(mealKey) {
   const m = MEALS.find((x) => x.key === mealKey); if (!m) return;
   const h = new Date().getHours(); if (!(h >= m.start && h < m.end)) { toast('现在不在打卡时间哦'); return; }
   if (mealDone(todayStr(), auth.role, mealKey)) { toast('这餐已经打过啦'); return; }
+  const together = state.mode && state.mode.v === MODE_TOGETHER && otherPet();
   const day = todayStr(); state.checkins[day] = state.checkins[day] || {}; state.checkins[day][auth.role] = state.checkins[day][auth.role] || []; state.checkins[day][auth.role].push(mealKey);
-  myPet().exp += m.exp; renderAll(); toast(`${m.emoji} ${m.label}打卡成功 +${m.exp} 经验`);
-  if (mealDone(day, otherRole(), mealKey)) setTimeout(() => { hearts(8); toast('💞 你们俩这餐都吃了，默契 +1！'); }, 500);
+  myPet().exp += m.exp;
+  if (together && !mealDone(day, otherRole(), mealKey)) {
+    // 同地模式：点一次，两人都算打卡
+    state.checkins[day][otherRole()] = state.checkins[day][otherRole()] || [];
+    state.checkins[day][otherRole()].push(mealKey);
+    otherPet().exp += m.exp;
+  }
+  renderAll();
+  if (together) { toast(`${m.emoji} ${m.label}一起吃啦 · 两人打卡完成 +${m.exp} 经验/人`); hearts(8); }
+  else { toast(`${m.emoji} ${m.label}打卡成功 +${m.exp} 经验`); if (mealDone(day, otherRole(), mealKey)) setTimeout(() => { hearts(8); toast('💞 你们俩这餐都吃了，默契 +1！'); }, 500); }
   await push(true);
 }
 async function openBox() {
