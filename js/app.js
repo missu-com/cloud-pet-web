@@ -5,7 +5,7 @@
 'use strict';
 
 /* ===== 启动自检 / 防白屏兜底（必须最先执行） ===== */
-window.__APP_VER = '20260910b';
+window.__APP_VER = '20260912a';
 (function () {
   function ensureSplash() {
     var s = document.getElementById('bootSplash');
@@ -545,11 +545,17 @@ function outfitCondText(key) { return { bow: '等级 3', beret: '等级 6', scar
 function outfitAnchorImg(key, cls) { const o = OUTFITS[key]; if (!o || !o.img) return ''; const a = o.a; return `<img class="${cls} ${a.z === 1 ? 'oa-back' : 'oa-front'}" src="${o.img}" style="left:${a.x}%;top:${a.y}%;width:${a.w}%" alt="">`; }
 
 /* ================= 场景（本地 UI 偏好） ================= */
-let sceneMode = 'home'; // home | work
+let sceneMode = 'home'; // home=两只在一起 | work=各忙各的（单独呆）
+const SCENE_LABEL = { home: '💛 在一起', work: '🍃 单独呆' };
+const SCENE_TIP = { home: '现在两只在一起 · 点一下切到「单独呆」', work: '现在是单独呆 · 点一下切到「在一起」' };
+function syncSceneToggle() {
+  const btn = $('#btnSceneToggle'); if (!btn) return;
+  btn.textContent = SCENE_LABEL[sceneMode] || SCENE_LABEL.home;
+  btn.title = SCENE_TIP[sceneMode] || '';
+}
 function toggleScene() {
   sceneMode = sceneMode === 'home' ? 'work' : 'home';
-  const btn = $('#btnSceneToggle');
-  btn.textContent = sceneMode === 'home' ? '💼 去上班' : '🏠 下班回家';
+  syncSceneToggle();
   renderHome();
 }
 
@@ -2459,7 +2465,7 @@ function init() {
   const tabHash = location.hash.match(/tab=([a-z]+)/i);
   if (tabHash) { const t = tabHash[1]; const btn = document.querySelector('.tabbar button[data-tab="' + t + '"]'); if (btn) btn.click(); }
   const scHash = location.hash.match(/scene=(home|work)/i);
-  if (scHash && sceneMode !== scHash[1]) { try { sceneMode = scHash[1]; const b = $('#btnSceneToggle'); if (b) b.textContent = sceneMode === 'home' ? '💼 去上班' : '🏠 下班回家'; renderHome(); } catch (e) {} }
+  if (scHash && sceneMode !== scHash[1]) { try { sceneMode = scHash[1]; syncSceneToggle(); renderHome(); } catch (e) {} }
   try { bindEvents(); } catch (e) { console.error('bind err', e); }
   setInterval(() => pull(true), 60000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden && auth) pull(true); });

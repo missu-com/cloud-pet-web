@@ -278,33 +278,44 @@ input, textarea, select { font-family: inherit; }
 .whisper-item .info .d { font-size: 11.5px; color: var(--text-light); margin-top: 2px; }
 .whisper-empty { text-align: center; color: var(--text-light); font-size: 13px; padding: 14px 0; }
 
-/* 打扮 */
-.dress-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+/* 打扮（图片等比缩放：大图不再撑破网格导致横向滚动，一屏看完） */
+.dress-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
 .dress-item {
+  min-width: 0; max-width: 100%; overflow: hidden;
   background: #FFF9F5; border: 2px solid transparent;
-  border-radius: 16px; padding: 12px 8px; text-align: center;
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  border-radius: 16px; padding: 9px 6px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
   transition: transform .15s, border-color .2s;
 }
 .dress-item:active { transform: scale(.94); }
 .dress-item.owned { border-color: #FBDCE6; }
 .dress-item.wearing { border-color: var(--pink-deep); background: #FFF0F4; }
-.dress-item .emoji { font-size: 26px; height: 34px; }
+.dress-item .emoji {
+  width: 100%; height: 62px; font-size: 26px;
+  display: flex; align-items: center; justify-content: center;
+}
+.dress-item .emoji img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.dress-item .n, .dress-item .lock {
+  max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .dress-item .n { font-size: 12px; font-weight: 600; }
 .dress-item .lock { font-size: 10.5px; color: var(--text-light); }
 .furn-wall { display: flex; flex-wrap: wrap; gap: 8px; }
 .furn-chip {
+  min-width: 0; max-width: 100%;
   background: #FFF6E9; border-radius: 12px; padding: 8px 12px; font-size: 12px;
   display: flex; align-items: center; gap: 5px;
 }
+.furn-chip img { width: 26px; height: 26px; object-fit: contain; flex: none; }
 .furn-chip.empty { background: #F6F1F2; color: #C9BAC0; }
 
-/* 成就 */
-.ach-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+/* 成就（换 4 宫格换行，不再横向滑动） */
+.ach-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-bottom: 4px; }
 .ach-chip {
-  flex: none; width: 74px; text-align: center;
+  min-width: 0; text-align: center;
   background: #FFF9F5; border-radius: 14px; padding: 10px 4px;
 }
+.ach-chip .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ach-chip .e { font-size: 22px; filter: grayscale(1) opacity(.4); }
 .ach-chip.on .e { filter: none; }
 .ach-chip.on { background: #FFF0C9; }
