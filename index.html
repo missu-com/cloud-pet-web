@@ -15,12 +15,12 @@
 <style>html,body{background:#FFF8F0;margin:0;padding:0;min-height:100%;}</style>
 <link rel="icon" type="image/png" href="assets/app_icon.png">
 <link rel="apple-touch-icon" href="assets/app_icon.png">
-<link rel="stylesheet" href="css/style.css?v=20260912a">
+<link rel="stylesheet" href="css/style.css?v=20260912b">
 </head>
 <body>
 <script>
 /* 启动兜底 #1：body 一解析就先显示加载页（绝不白屏）；app.js 会复用/移除它 */
-window.__HTML_VER = '20260912a';
+window.__HTML_VER = '20260912b';
 (function () {
   var s = document.getElementById('bootSplash');
   if (!s) {
@@ -103,6 +103,7 @@ window.__HTML_VER = '20260912a';
         <div id="petStagePets" class="stage-pets"></div>
         <div id="stageFloat" class="stage-float"></div>
         <div class="stage-hint">👆 摸哪动哪：头 · 耳朵 · 尾巴 · 肚子 · 爪子，各有各的反应</div>
+        <div id="loveBar" class="love-bar hidden"></div>
         <div id="petDock" class="stage-dock"></div>
 
         <div id="homeSheet" class="sheet">
@@ -291,6 +292,6 @@ window.__HTML_VER = '20260912a';
 <div id="modal" class="modal hidden"><div class="modal-box" id="modalBox"></div></div>
 <div id="toast" class="toast hidden"></div>
 
-<script src="js/app.js?v=20260912a"></script>
+<script src="js/app.js?v=20260912b"></script>
 </body>
 </html>

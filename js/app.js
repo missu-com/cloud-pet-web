@@ -5,7 +5,7 @@
 'use strict';
 
 /* ===== 启动自检 / 防白屏兜底（必须最先执行） ===== */
-window.__APP_VER = '20260912a';
+window.__APP_VER = '20260912b';
 (function () {
   function ensureSplash() {
     var s = document.getElementById('bootSplash');
@@ -816,8 +816,8 @@ function renderStagePets(atWork) {
   const legacyHtml = () => {
     let html;
     if (together) {
-      // 同地：两只都是 duo 大小（一样大），分别站左右
-      html = stagePetHtml(auth.role, false, 'duoA') + stagePetHtml(otherRole(), false, 'duoB');
+      // 同地：小狗永远站左（duoA），小兔永远站右（duoB），两只一样大
+      html = stagePetHtml('dog', false, 'duoA') + stagePetHtml('rabbit', false, 'duoB');
     } else {
       html = stagePetHtml(auth.role, !atWork, atWork ? 'workA' : 'center');
       if (otherPet()) html += stagePetHtml(otherRole(), false, atWork ? 'workB' : 'side');
@@ -854,7 +854,7 @@ function renderDock() {
 }
 
 /* ---------- 互动动作 ---------- */
-function bub(pet, text) { if (!pet) return; const el = pet.querySelector('.sp-bubble'); if (el) { el.textContent = text; el.classList.add('show'); clearTimeout(bub._t); bub._t = setTimeout(() => { el.classList.remove('show'); el.textContent = ''; }, 2600); } }
+function bub(pet, text) { if (!pet) return; const el = pet.querySelector('.sp-bubble'); if (el) { el.textContent = text; el.classList.add('show'); clearTimeout(el._bubT); el._bubT = setTimeout(() => { el.classList.remove('show'); el.textContent = ''; }, 2600); } }
 function floatEmoji(emoji, pet, mode) {
   const layer = $('#stageFloat'); if (!layer) return;
   const el = document.createElement('span'); el.className = 'float-emoji'; el.textContent = emoji;
@@ -934,6 +934,66 @@ function foodOf(id) {
 }
 function stagePetDom(role) { return document.querySelector(`.stage-pet[data-role="${role}"]`); }
 function tasteOf(role, food) { const t = TASTE[role] && TASTE[role][food.id]; return (typeof t === 'number') ? t : (food.like === 0 || food.like === 2 ? food.like : 1); }
+
+/* ================= 💕 双宠亲密互动（抱抱/贴贴/头贴头/亲亲/窝在一起） =================
+   两种触发：主人点 love-bar 按钮（playDuoIx(key)），或它们自己来（duoAutoTick 挂在 maybeInteract 心跳里）。
+   动画由 #petStagePets.ix-<key> 驱动：左边 pos-duoA（小狗）和右边 pos-duoB（小兔）各自靠向中间。 */
+const DUO_IX = {
+  hug:    { label: '🤗', name: '抱抱',   dur: 2600, fx: '🤗', badges: ['🥰', '🥰'], lines: ['抱抱最暖啦~', '抱住就不撒手啦！', '暖呼呼的…'],           sound: 'purr' },
+  lean:   { label: '🫂', name: '贴贴',   dur: 2400, fx: '✨', badges: ['😊', '😊'], lines: ['贴贴~', '蹭蹭你~', '毛毛贴着毛毛'],                     sound: 'purr' },
+  head:   { label: '💗', name: '头贴头', dur: 2500, fx: '💗', badges: ['😳', '🥰'], lines: ['头贴头，心贴心', '碰碰小脑门~', '咯咯咯凑好近呀'],       sound: 'boop' },
+  kiss:   { label: '💋', name: '亲亲',   dur: 2200, fx: '💋', badges: ['😳', '😍'], lines: ['mua~', '啾一下~', '偷偷亲一口！'],                     sound: 'pop' },
+  cuddle: { label: '🛏️', name: '窝一起', dur: 4200, fx: '💞', badges: ['😴', '😴'], lines: ['窝在一起好舒服…', '就这样赖一会儿嘛~', '挨着打个盹~'],   sound: 'sleepy' }
+};
+let duoIxBusy = false, duoAutoNext = Date.now() + 40000;
+function duoStageReady() {
+  return sceneMode === 'home' && otherPet()
+    && document.querySelector('.stage-pet.pos-duoA') && document.querySelector('.stage-pet.pos-duoB');
+}
+function playDuoIx(key, auto) {
+  const ix = DUO_IX[key];
+  if (!ix || duoIxBusy || !duoStageReady()) return false;
+  duoIxBusy = true;
+  const host = $('#petStagePets'); if (!host) { duoIxBusy = false; return false; }
+  Object.keys(DUO_IX).forEach((k) => host.classList.remove('ix-' + k));
+  void host.offsetWidth;                                   // 重启动画
+  host.classList.add('ix-' + key);
+  /* 中央大表情 */
+  const fl = $('#stageFloat');
+  if (fl) { const p = document.createElement('span'); p.className = 'float-emoji ix-fx'; p.textContent = ix.fx; p.style.left = '43%'; p.style.top = '30%'; fl.appendChild(p); setTimeout(() => p.remove(), 1500); }
+  /* 两只各自：头顶心情徽章 + 一前一后说一句 + 撒点小表情 */
+  const pets = [document.querySelector('.stage-pet.pos-duoA'), document.querySelector('.stage-pet.pos-duoB')];
+  pets.forEach((pet, i) => {
+    if (!pet) return;
+    showMoodBadge(pet, ix.badges[i] || '🥰', ix.dur - 200);
+    if (!auto && pet.dataset.role) bumpCare(pet.dataset.role, 'happy', +3);
+    setTimeout(() => bub(pet, ix.lines[Math.floor(Math.random() * ix.lines.length)]), i ? 750 : 250);
+    floatEmoji(i ? '💗' : (ix.fx + ''), pet);
+  });
+  if (!auto) { sfx(ix.sound || 'purr'); hearts(9); renderPetStats(); }
+  setTimeout(() => { host.classList.remove('ix-' + key); duoIxBusy = false; }, ix.dur);
+  return true;
+}
+/* 它们自己也会腻在一起：每 45~105 秒随机来一次（页面可见、在小家 tab、没在睡觉时） */
+function duoAutoTick() {
+  if (!duoStageReady() || duoIxBusy) { duoAutoNext = Date.now() + 30000; return false; }
+  if (Date.now() < duoAutoNext) return false;
+  if (document.hidden || !$('#tab-home') || !$('#tab-home').classList.contains('active')) return false;
+  if (ROLES.some((r) => sleepState[r])) { duoAutoNext = Date.now() + 45000; return false; }
+  const keys = Object.keys(DUO_IX);
+  const played = playDuoIx(keys[Math.floor(Math.random() * keys.length)], true);
+  duoAutoNext = Date.now() + 45000 + Math.random() * 60000;
+  return played;
+}
+/* 亲密按钮条：只在「在一起」且对方在时出现（替代抚摸提示条的位置） */
+function renderLoveBar() {
+  const bar = $('#loveBar'), hint = document.querySelector('.stage-hint'); if (!bar) return;
+  const together = duoStageReady();
+  bar.classList.toggle('hidden', !together);
+  if (hint) hint.style.opacity = together ? 0 : '';
+  if (!together) { bar.innerHTML = ''; return; }
+  bar.innerHTML = Object.entries(DUO_IX).map(([k, v]) => `<button class="love-btn" data-ix="${k}" title="${v.name}"><span class="lb-ico">${v.label}</span><span class="lb-t">${v.name}</span></button>`).join('');
+}
 
 /* ---------- 喂食托盘：点一下喂自己；按住拖到宠物嘴边喂它（2D/3D 通吃） ---------- */
 let feedTrayEl = null, feedTrayTimer = null;
@@ -1204,7 +1264,7 @@ function runDock(act) {
   else if (act === 'bathe') openBath(role);
   else if (act === 'sleep') doSleep(role);
   else if (act === 'talk') talkPet(role);
-  else if (act === 'help') toast('👆 摸哪动哪：头·耳朵·尾巴·肚子·爪子各有反应；喂食·洗澡(三步)·睡觉·说话都在下面哦');
+  else if (act === 'help') toast('👆 摸哪动哪：头·耳朵·尾巴·肚子·爪子各有反应；💕 两只都在家时还能点「抱抱 / 贴贴 / 头贴头 / 亲亲 / 窝一起」帮它们亲近哦');
 }
 function toggleSheet(open) {
   const s = $('#homeSheet'); if (!s) return;
@@ -1246,6 +1306,7 @@ function renderHome() {
   renderStagePets(atWork);      // 汤姆猫式大宠物 + 抚摸分区
   renderPetStats();             // 饱食/干净/开心/精力
   renderDock();                 // 喂食/洗澡/睡觉/说话/提示
+  renderLoveBar();              // 💕 双宠亲密按钮条（在一起时才有）
   if (atWork) renderWorkPanel(); else renderHomePanel();
   const me = myPet();
   const lp = levelProgress(me && me.exp);
@@ -1364,6 +1425,7 @@ async function delTodo(id) {
 let interactTimer = null, lastInteract = 0;
 function maybeInteract() {
   const now = Date.now(); if (now - lastInteract < 5600) return; lastInteract = now;
+  if (duoAutoTick()) return;                                   // 💕 先看它们要不要自己腻在一起
   const rolesAlive = ROLES.filter((r) => state.pets && state.pets[r]);
   if (rolesAlive.length === 0) return;
   const act = Math.floor(Math.random() * 3);
@@ -2431,6 +2493,11 @@ function bindEvents() {
   });
   const dock = $('#petDock');
   if (dock) dock.addEventListener('click', (e) => { const b = e.target.closest('.dock-btn'); if (b) runDock(b.dataset.act); });
+  const loveBar = $('#loveBar');
+  if (loveBar) loveBar.addEventListener('click', (e) => {
+    const b = e.target.closest('.love-btn'); if (!b) return;
+    if (!playDuoIx(b.dataset.ix, false)) toast('想看贴贴？先切到「💛 在一起」，等 TA 也在哦~');
+  });
   onEl('btnSheet', 'click', () => toggleSheet());
   onEl('sheetMask', 'click', () => toggleSheet(false));
   // gate
